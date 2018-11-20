@@ -41,7 +41,7 @@ public void setup() {
   // dodger attributes
   dodger = new Dodger(width/2, height/2, 0);
   rotVel = 20;
-  rotAcc = 2;
+  rotAcc = 1;
   //enemy attributes
   startVel = 3;
   limiter = 0.5f; // makes the arrow more narrow
@@ -64,6 +64,8 @@ public void draw() {
     for(eNum = 0; eNum < eActive; eNum++){
       enemies[eNum].update();
       if (enemies[eNum].bounds()) {
+        score++;
+
         newEnemy();
       }
       if(enemies[eNum].collision()){
@@ -71,16 +73,13 @@ public void draw() {
       }
       enemies[eNum].draw();
     }
-    score++;
+    rotVel += rotAcc;
   } else {
     showScore();
   }
 }
 
 
-public void keyReleased() { // listen for user input
-  rotVel = 20;
-}
 
 public void newEnemy() {
   int border;
@@ -100,6 +99,8 @@ public void newEnemy() {
 public void showScore() {
   background(0);
   textSize(100);
+  stroke(255);
+  strokeWeight(6);
   textAlign(CENTER, CENTER);
   // draw logo
   int border = 15;
@@ -118,12 +119,22 @@ public void keyPressed() { // listen for user input
   if(gameOver){
     gameOver = !gameOver;
     setup();
-  } else if (keyCode ==  LEFT) {
-    clockwise = true;
-  } else if (keyCode == RIGHT) {
-    clockwise = false;
+  } else {
+    if(!clockwise){
+      rotVel = 20;
     }
-    rotVel += rotAcc;
+    clockwise = true;
+  }
+  // if (keyCode ==  LEFT) {
+  //   clockwise = true;
+  // } else if (keyCode == RIGHT) {
+  //   clockwise = false;
+  // }
+  }
+
+  public void keyReleased() { // listen for user input
+    clockwise = false;
+    rotVel = 20;
   }
 class Dodger {
 
@@ -157,12 +168,14 @@ class Dodger {
 
   public void update() {
     //dodger moves
+    float dampening = 0.999999f;
     move = new PVector(0, vel);
     if(clockwise){
       a -= 0.001f * rotVel;
     } else {
       a += 0.001f * rotVel;
     }
+    rotVel *= dampening;
     move = move.rotate(a);
     pos.add(move);
   }
@@ -189,16 +202,22 @@ class Enemy {
   float a;
   float size = 18;
   float vel;
+  float [] rndmAst = new float[16]; //random zahlen array fuer asteroid vertex
 
   Enemy (float _x, float _y, float _a, float _vel, String _type) {
     pos = new PVector(_x, _y);
     a = _a;
     type = _type;
     vel = _vel;
+    for (int i=0; i < rndmAst.length; i++){
+      rndmAst[i] = random(4, size);
+    }
   }
 
   public void draw() {
+    fill(0);
     rectMode(CENTER);
+    ellipseMode(CENTER);
     pushMatrix();
     translate(pos.x, pos.y);
     rotate(a);
@@ -210,9 +229,26 @@ class Enemy {
       line(0.5f * size, -1 * size, 0, 1 * size);
       line(-0.5f * size, -1 * size, 0, 0);
       line(0.5f * size, -1 * size, 0, 0);
+      fill(255, 255, 255, 100);
+      noStroke();
+      ellipse(0, 0, size*15, size*15);
     } else if(type == "asteroid") {
-      ellipse(0, 0, size*2, size*2);
-    }
+      rotate(frameCount*0.01f);
+          beginShape();
+            vertex(0, -rndmAst[1]);//oben
+            vertex(rndmAst[0], -12);
+            vertex(rndmAst[2], 0);//rechts
+            vertex(12, rndmAst[4]);
+            vertex(0, rndmAst[3]);//unte
+            vertex(-12, 12);
+            vertex(-rndmAst[4], 0);//links
+            vertex(-12, -12);
+            vertex(0, -rndmAst[1]);//oben
+          endShape();
+          fill(255, 255, 255, 100);
+          noStroke();
+          ellipse(0, 0, size*15, size*15);
+      }
     // line(0, 0, move.x, move.y);
     popMatrix();
 

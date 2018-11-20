@@ -7,16 +7,22 @@ class Enemy {
   float a;
   float size = 18;
   float vel;
+  float [] rndmAst = new float[16]; //random zahlen array fuer asteroid vertex
 
   Enemy (float _x, float _y, float _a, float _vel, String _type) {
     pos = new PVector(_x, _y);
     a = _a;
     type = _type;
     vel = _vel;
+    for (int i=0; i < rndmAst.length; i++){
+      rndmAst[i] = random(4, size);
+    }
   }
 
   void draw() {
+    fill(0);
     rectMode(CENTER);
+    ellipseMode(CENTER);
     pushMatrix();
     translate(pos.x, pos.y);
     rotate(a);
@@ -28,9 +34,26 @@ class Enemy {
       line(0.5 * size, -1 * size, 0, 1 * size);
       line(-0.5 * size, -1 * size, 0, 0);
       line(0.5 * size, -1 * size, 0, 0);
+      fill(255, 255, 255, 100);
+      noStroke();
+      ellipse(0, 0, size*15, size*15);
     } else if(type == "asteroid") {
-      ellipse(0, 0, size*2, size*2);
-    }
+      rotate(frameCount*0.01);
+          beginShape();
+            vertex(0, -rndmAst[1]);//oben
+            vertex(rndmAst[0], -12);
+            vertex(rndmAst[2], 0);//rechts
+            vertex(12, rndmAst[4]);
+            vertex(0, rndmAst[3]);//unte
+            vertex(-12, 12);
+            vertex(-rndmAst[4], 0);//links
+            vertex(-12, -12);
+            vertex(0, -rndmAst[1]);//oben
+          endShape();
+          fill(255, 255, 255, 100);
+          noStroke();
+          ellipse(0, 0, size*15, size*15);
+      }
     // line(0, 0, move.x, move.y);
     popMatrix();
 

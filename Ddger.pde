@@ -30,12 +30,14 @@ class Dodger {
 
   void update() {
     //dodger moves
+    float dampening = 0.999999;
     move = new PVector(0, vel);
     if(clockwise){
       a -= 0.001 * rotVel;
     } else {
       a += 0.001 * rotVel;
     }
+    rotVel *= dampening;
     move = move.rotate(a);
     pos.add(move);
   }

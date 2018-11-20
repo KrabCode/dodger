@@ -25,7 +25,7 @@ void setup() {
   // dodger attributes
   dodger = new Dodger(width/2, height/2, 0);
   rotVel = 20;
-  rotAcc = 2;
+  rotAcc = 1;
   //enemy attributes
   startVel = 3;
   limiter = 0.5; // makes the arrow more narrow
@@ -48,6 +48,8 @@ void draw() {
     for(eNum = 0; eNum < eActive; eNum++){
       enemies[eNum].update();
       if (enemies[eNum].bounds()) {
+        score++;
+
         newEnemy();
       }
       if(enemies[eNum].collision()){
@@ -55,16 +57,13 @@ void draw() {
       }
       enemies[eNum].draw();
     }
-    score++;
+    rotVel += rotAcc;
   } else {
     showScore();
   }
 }
 
 
-void keyReleased() { // listen for user input
-  rotVel = 20;
-}
 
 void newEnemy() {
   int border;
@@ -84,6 +83,8 @@ void newEnemy() {
 void showScore() {
   background(0);
   textSize(100);
+  stroke(255);
+  strokeWeight(6);
   textAlign(CENTER, CENTER);
   // draw logo
   int border = 15;
@@ -102,10 +103,20 @@ void keyPressed() { // listen for user input
   if(gameOver){
     gameOver = !gameOver;
     setup();
-  } else if (keyCode ==  LEFT) {
-    clockwise = true;
-  } else if (keyCode == RIGHT) {
-    clockwise = false;
+  } else {
+    if(!clockwise){
+      rotVel = 20;
     }
-    rotVel += rotAcc;
+    clockwise = true;
+  }
+  // if (keyCode ==  LEFT) {
+  //   clockwise = true;
+  // } else if (keyCode == RIGHT) {
+  //   clockwise = false;
+  // }
+  }
+
+  void keyReleased() { // listen for user input
+    clockwise = false;
+    rotVel = 20;
   }
