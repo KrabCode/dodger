@@ -43,4 +43,16 @@ class Dodger {
     //dodger moves
   }
 
+void bounds() {
+  if(pos.x < 0+size*2/3) {
+    pos.x = 0+size*2/3;
+  } else if(pos.x > width-size*2/3) {
+    pos.x = width-size*2/3;
+  }
+  if(pos.y < 0+size*2/3) {
+    pos.y = 0+size*2/3;
+  } else if(pos.y > height-size*2/3) {
+    pos.y = height-size*2/3;
+  }
+}
 }

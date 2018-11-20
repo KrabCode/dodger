@@ -13,6 +13,7 @@ void setup() {
 void draw() {
   background(0);
   dodger.update();
+  dodger.bounds();
   dodger.draw();
 }
 

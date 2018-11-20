@@ -29,6 +29,7 @@ public void setup() {
 public void draw() {
   background(0);
   dodger.update();
+  dodger.bounds();
   dodger.draw();
 }
 
@@ -73,10 +74,10 @@ class Dodger {
   public void update() {
     move = new PVector(0, vel);
     if(clockwise){
-      a += 0.02f;
+      a -= 0.02f;
       println("plus");
     } else {
-      a -= 0.02f;
+      a += 0.02f;
       println("minus");
     }
     move = move.rotate(a);
@@ -84,6 +85,18 @@ class Dodger {
     //dodger moves
   }
 
+public void bounds() {
+  if(pos.x < 0+size*2/3) {
+    pos.x = 0+size*2/3;
+  } else if(pos.x > width-size*2/3) {
+    pos.x = width-size*2/3;
+  }
+  if(pos.y < 0+size) {
+    pos.y = 0+size;
+  } else if(pos.y > height-size) {
+    pos.y = height-size;
+  }
+}
 }
   public void settings() {  size(800,600); }
   static public void main(String[] passedArgs) {
