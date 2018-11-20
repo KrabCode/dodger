@@ -5,7 +5,7 @@ class Dodger {
   PVector move;
   float a;
   float size = 25;
-  float vel = 2;
+  float vel = 5;
 
   Dodger (float _x, float _y, float _a) {
     pos = new PVector(_x, _y);
@@ -38,7 +38,6 @@ class Dodger {
     }
     move = move.rotate(a);
     pos.add(move);
-    println(a);
   }
 
   void bounds() {

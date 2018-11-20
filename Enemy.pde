@@ -6,12 +6,13 @@ class Enemy {
   //ship, asteroid
   float a;
   float size = 18;
-  float vel = 0.8;
+  float vel;
 
-  Enemy (float _x, float _y, float _a, String _type) {
+  Enemy (float _x, float _y, float _a, float _vel, String _type) {
     pos = new PVector(_x, _y);
     a = _a;
     type = _type;
+    vel = _vel;
   }
 
   void draw() {

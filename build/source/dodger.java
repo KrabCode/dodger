@@ -14,70 +14,117 @@ import java.io.IOException;
 
 public class dodger extends PApplet {
 
-int score, hiscore;
+PShape logo;
+
+int score;
+int hiscore = 0;
 Dodger dodger;
-Enemy enemy;
+
+Enemy[] enemies = new Enemy[99];
+int eNum;
+int eActive;
+float limiter; // makes the arrow more narrow
+// Enemy enemy;
+int startVel;
+
 boolean clockwise;
-int rotVel;
+int rotVel, rotAcc;
 boolean gameOver;
 
 public void setup() {
   
   background(0);
+  logo = loadShape("logo.svg");
+  shapeMode(CORNERS);
   gameOver = false;
   score = 0;
-  hiscore = 0;
+  // dodger attributes
   dodger = new Dodger(width/2, height/2, 0);
-  rotVel = 4;
-  newEnemy();
+  rotVel = 20;
+  rotAcc = 2;
+  //enemy attributes
+  startVel = 3;
+  limiter = 0.5f; // makes the arrow more narrow
+  eActive = 3;
+  for(eNum = 0; eNum < enemies.length; eNum++) {
+    newEnemy();
+  }
 }
 
 public void draw() {
   if(!gameOver){
-    background(0);
+    background(0, 0, 0, 20);
     dodger.update();
     dodger.bounds();
     dodger.draw();
-    enemy.update();
-    if (enemy.bounds()) {
-      newEnemy();
+    //adjust amount of enemies according to score
+    if(PApplet.parseInt(score/200*pow(1.02f, eActive)) > eActive && eActive < 99) {
+      eActive++;
     }
-    println(enemy.collision());
-    if(enemy.collision()){
-      gameOver = true;
+    for(eNum = 0; eNum < eActive; eNum++){
+      enemies[eNum].update();
+      if (enemies[eNum].bounds()) {
+        newEnemy();
+      }
+      if(enemies[eNum].collision()){
+        gameOver = true;
+      }
+      enemies[eNum].draw();
     }
-    enemy.draw();
     score++;
   } else {
     showScore();
   }
 }
 
-public void keyPressed() { //listen for user input
-  if (keyCode ==  LEFT) {
-    clockwise = true;
-  } else if (keyCode == RIGHT) {
-    clockwise = false;
-  }
-  rotVel++;
-}
 
-public void keyReleased() { //listen for user input
+public void keyReleased() { // listen for user input
   rotVel = 20;
 }
 
 public void newEnemy() {
-  enemy = new Enemy(0, height/2, random(PI, TWO_PI), "asteroid");
+  int border;
+  border = (int) random(4);
+  println(border);
+
+  if(border == 0 || border == 1) {
+    enemies[eNum] = new Enemy(0, random(height), random(PI + limiter, TWO_PI - limiter), startVel, "asteroid");
+  }
+  if(border == 2 || border == 3) {
+    enemies[eNum] = new Enemy(width, random(height), random(TWO_PI + limiter, TWO_PI + PI - limiter), startVel, "ship");
+  }
+
+  startVel += 0.1f;
 }
 
 public void showScore() {
-  // draw score & high score
-  //wait for key input to start new game
   background(0);
   textSize(100);
   textAlign(CENTER, CENTER);
-  text(score, width/2, height/2 -50);
+  // draw logo
+  int border = 15;
+  shape(logo, border, border+120, width-border, 250);
+  //update score
+  if (score > hiscore){
+    hiscore = score;
+  }
+  // draw menu, score & high score
+  text(score, width*1/4, height*2/3 -50);
+  text(hiscore, width*3/4, height*2/3 -50);
+  // wait for key input to start new game
 }
+
+public void keyPressed() { // listen for user input
+  if(gameOver){
+    gameOver = !gameOver;
+    setup();
+  } else if (keyCode ==  LEFT) {
+    clockwise = true;
+  } else if (keyCode == RIGHT) {
+    clockwise = false;
+    }
+    rotVel += rotAcc;
+  }
 class Dodger {
 
   //the dodger has x and y coordinates and an angle
@@ -85,7 +132,7 @@ class Dodger {
   PVector move;
   float a;
   float size = 25;
-  float vel = 2;
+  float vel = 5;
 
   Dodger (float _x, float _y, float _a) {
     pos = new PVector(_x, _y);
@@ -118,7 +165,6 @@ class Dodger {
     }
     move = move.rotate(a);
     pos.add(move);
-    println(a);
   }
 
   public void bounds() {
@@ -142,12 +188,13 @@ class Enemy {
   //ship, asteroid
   float a;
   float size = 18;
-  float vel = 0.8f;
+  float vel;
 
-  Enemy (float _x, float _y, float _a, String _type) {
+  Enemy (float _x, float _y, float _a, float _vel, String _type) {
     pos = new PVector(_x, _y);
     a = _a;
     type = _type;
+    vel = _vel;
   }
 
   public void draw() {
@@ -194,7 +241,7 @@ class Enemy {
     }
   }
 }
-  public void settings() {  size(800,600); }
+  public void settings() {  size(1200, 900); }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "dodger" };
     if (passedArgs != null) {
