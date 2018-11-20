@@ -3,7 +3,6 @@ class Dodger {
   //the dodger has x and y coordinates and an angle
   PVector pos;
   PVector move;
-
   float a;
   float size = 25;
   float vel = 2;
@@ -33,10 +32,8 @@ class Dodger {
     move = new PVector(0, vel);
     if(clockwise){
       a -= 0.02;
-      println("plus");
     } else {
       a += 0.02;
-      println("minus");
     }
     move = move.rotate(a);
     pos.add(move);
