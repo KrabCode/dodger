@@ -2,9 +2,11 @@ class Dodger {
 
   //the dodger has x and y coordinates and an angle
   PVector pos;
+  PVector move;
 
   float a;
   float size = 25;
+  float vel = 2;
 
   Dodger (float _x, float _y, float _a) {
     pos = new PVector(_x, _y);
@@ -22,11 +24,22 @@ class Dodger {
     line(-0.5 * size, -1 * size, 0, 1 * size);
     line(0.5 * size, -1 * size, 0, 1 * size);
     line(-0.4 * size, -0.6 * size, 0.4 * size, -0.6 * size); //back line
+    // line(0, 0, move.x, move.y);
     popMatrix();
-    a += 0.01;
+
   }
 
   void update() {
+    move = new PVector(0, vel);
+    if(clockwise){
+      a -= 0.02;
+      println("plus");
+    } else {
+      a += 0.02;
+      println("minus");
+    }
+    move = move.rotate(a);
+    pos.add(move);
     //dodger moves
   }
 

@@ -1,5 +1,6 @@
 int score, hiscore;
 Dodger dodger;
+boolean clockwise;
 
 void setup() {
   size(800,600);
@@ -16,9 +17,9 @@ void draw() {
 }
 
 void keyPressed() { //listen for user input
-  if (key ==  LEFT) {
-
-  } else if (key == RIGHT) {
-
+  if (keyCode ==  LEFT) {
+    clockwise = true;
+  } else if (keyCode == RIGHT) {
+    clockwise = false;
   }
 }

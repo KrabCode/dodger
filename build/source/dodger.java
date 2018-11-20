@@ -16,6 +16,7 @@ public class dodger extends PApplet {
 
 int score, hiscore;
 Dodger dodger;
+boolean clockwise;
 
 public void setup() {
   
@@ -32,19 +33,21 @@ public void draw() {
 }
 
 public void keyPressed() { //listen for user input
-  if (key ==  LEFT) {
-
-  } else if (key == RIGHT) {
-
+  if (keyCode ==  LEFT) {
+    clockwise = true;
+  } else if (keyCode == RIGHT) {
+    clockwise = false;
   }
 }
 class Dodger {
 
   //the dodger has x and y coordinates and an angle
   PVector pos;
+  PVector move;
 
   float a;
   float size = 25;
+  float vel = 2;
 
   Dodger (float _x, float _y, float _a) {
     pos = new PVector(_x, _y);
@@ -62,11 +65,22 @@ class Dodger {
     line(-0.5f * size, -1 * size, 0, 1 * size);
     line(0.5f * size, -1 * size, 0, 1 * size);
     line(-0.4f * size, -0.6f * size, 0.4f * size, -0.6f * size); //back line
+    // line(0, 0, move.x, move.y);
     popMatrix();
-    a += 0.01f;
+
   }
 
   public void update() {
+    move = new PVector(0, vel);
+    if(clockwise){
+      a += 0.02f;
+      println("plus");
+    } else {
+      a -= 0.02f;
+      println("minus");
+    }
+    move = move.rotate(a);
+    pos.add(move);
     //dodger moves
   }
 
