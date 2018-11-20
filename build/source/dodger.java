@@ -31,6 +31,13 @@ public void draw() {
   dodger.draw();
 }
 
+public void keyPressed() { //listen for user input
+  if (key ==  LEFT) {
+
+  } else if (key == RIGHT) {
+
+  }
+}
 class Dodger {
 
   //the dodger has x and y coordinates and an angle
