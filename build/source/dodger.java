@@ -17,6 +17,7 @@ public class dodger extends PApplet {
 int score, hiscore;
 Dodger dodger;
 boolean clockwise;
+int rotVel;
 
 public void setup() {
   
@@ -24,6 +25,7 @@ public void setup() {
   score = 0;
   hiscore = 0;
   dodger = new Dodger(width/2, height/2, 0);
+  rotVel = 4;
 }
 
 public void draw() {
@@ -39,6 +41,10 @@ public void keyPressed() { //listen for user input
   } else if (keyCode == RIGHT) {
     clockwise = false;
   }
+  rotVel++;
+}
+public void keyReleased() { //listen for user input
+  rotVel = 20;
 }
 class Dodger {
 
@@ -72,31 +78,30 @@ class Dodger {
   }
 
   public void update() {
+    //dodger moves
     move = new PVector(0, vel);
     if(clockwise){
-      a -= 0.02f;
-      println("plus");
+      a -= 0.001f * rotVel;
     } else {
-      a += 0.02f;
-      println("minus");
+      a += 0.001f * rotVel;
     }
     move = move.rotate(a);
     pos.add(move);
-    //dodger moves
+    println(a);
   }
 
-public void bounds() {
-  if(pos.x < 0+size*2/3) {
-    pos.x = 0+size*2/3;
-  } else if(pos.x > width-size*2/3) {
-    pos.x = width-size*2/3;
+  public void bounds() {
+    if(pos.x < 0+size*2/3) {
+      pos.x = 0+size*2/3;
+    } else if(pos.x > width-size*2/3) {
+      pos.x = width-size*2/3;
+    }
+    if(pos.y < 0+size*2/3) {
+      pos.y = 0+size*2/3;
+    } else if(pos.y > height-size*2/3) {
+      pos.y = height-size*2/3;
+    }
   }
-  if(pos.y < 0+size) {
-    pos.y = 0+size;
-  } else if(pos.y > height-size) {
-    pos.y = height-size;
-  }
-}
 }
   public void settings() {  size(800,600); }
   static public void main(String[] passedArgs) {

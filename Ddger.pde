@@ -30,29 +30,28 @@ class Dodger {
   }
 
   void update() {
+    //dodger moves
     move = new PVector(0, vel);
     if(clockwise){
-      a -= 0.02;
-      println("plus");
+      a -= 0.001 * rotVel;
     } else {
-      a += 0.02;
-      println("minus");
+      a += 0.001 * rotVel;
     }
     move = move.rotate(a);
     pos.add(move);
-    //dodger moves
+    println(a);
   }
 
-void bounds() {
-  if(pos.x < 0+size*2/3) {
-    pos.x = 0+size*2/3;
-  } else if(pos.x > width-size*2/3) {
-    pos.x = width-size*2/3;
+  void bounds() {
+    if(pos.x < 0+size*2/3) {
+      pos.x = 0+size*2/3;
+    } else if(pos.x > width-size*2/3) {
+      pos.x = width-size*2/3;
+    }
+    if(pos.y < 0+size*2/3) {
+      pos.y = 0+size*2/3;
+    } else if(pos.y > height-size*2/3) {
+      pos.y = height-size*2/3;
+    }
   }
-  if(pos.y < 0+size*2/3) {
-    pos.y = 0+size*2/3;
-  } else if(pos.y > height-size*2/3) {
-    pos.y = height-size*2/3;
-  }
-}
 }
