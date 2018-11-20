@@ -3,7 +3,6 @@ class Dodger {
   //the dodger has x and y coordinates and an angle
   PVector pos;
   PVector move;
-
   float a;
   float size = 25;
   float vel = 2;

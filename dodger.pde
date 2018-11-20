@@ -1,5 +1,6 @@
 int score, hiscore;
 Dodger dodger;
+Enemy enemy;
 boolean clockwise;
 int rotVel;
 
@@ -10,6 +11,7 @@ void setup() {
   hiscore = 0;
   dodger = new Dodger(width/2, height/2, 0);
   rotVel = 4;
+  newEnemy();
 }
 
 void draw() {
@@ -17,6 +19,12 @@ void draw() {
   dodger.update();
   dodger.bounds();
   dodger.draw();
+  enemy.update();
+  if (enemy.bounds()) {
+    newEnemy();
+  }
+  println(enemy.collision());
+  enemy.draw();
 }
 
 void keyPressed() { //listen for user input
@@ -27,6 +35,11 @@ void keyPressed() { //listen for user input
   }
   rotVel++;
 }
+
 void keyReleased() { //listen for user input
   rotVel = 20;
+}
+
+void newEnemy() {
+  enemy = new Enemy(0, height/2, random(PI, TWO_PI), "asteroid");
 }

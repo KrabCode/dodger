@@ -16,6 +16,7 @@ public class dodger extends PApplet {
 
 int score, hiscore;
 Dodger dodger;
+Enemy enemy;
 boolean clockwise;
 int rotVel;
 
@@ -26,6 +27,7 @@ public void setup() {
   hiscore = 0;
   dodger = new Dodger(width/2, height/2, 0);
   rotVel = 4;
+  newEnemy();
 }
 
 public void draw() {
@@ -33,6 +35,12 @@ public void draw() {
   dodger.update();
   dodger.bounds();
   dodger.draw();
+  enemy.update();
+  if (enemy.bounds()) {
+    newEnemy();
+  }
+  println(enemy.collision());
+  enemy.draw();
 }
 
 public void keyPressed() { //listen for user input
@@ -43,15 +51,19 @@ public void keyPressed() { //listen for user input
   }
   rotVel++;
 }
+
 public void keyReleased() { //listen for user input
   rotVel = 20;
+}
+
+public void newEnemy() {
+  enemy = new Enemy(0, height/2, random(PI, TWO_PI), "asteroid");
 }
 class Dodger {
 
   //the dodger has x and y coordinates and an angle
   PVector pos;
   PVector move;
-
   float a;
   float size = 25;
   float vel = 2;
@@ -100,6 +112,66 @@ class Dodger {
       pos.y = 0+size*2/3;
     } else if(pos.y > height-size*2/3) {
       pos.y = height-size*2/3;
+    }
+  }
+}
+class Enemy {
+  //the dodger has x and y coordinates and an angle
+  PVector pos;
+  PVector move;
+  String type;
+  //ship, asteroid
+  float a;
+  float size = 18;
+  float vel = 0.8f;
+
+  Enemy (float _x, float _y, float _a, String _type) {
+    pos = new PVector(_x, _y);
+    a = _a;
+    type = _type;
+  }
+
+  public void draw() {
+    rectMode(CENTER);
+    pushMatrix();
+    translate(pos.x, pos.y);
+    rotate(a);
+    // rect(0, 0, sin(a)*30, 50);
+    stroke(255);
+    strokeWeight(6);
+    if(type == "ship") {
+      line(-0.5f * size, -1 * size, 0, 1 * size);
+      line(0.5f * size, -1 * size, 0, 1 * size);
+      line(-0.5f * size, -1 * size, 0, 0);
+      line(0.5f * size, -1 * size, 0, 0);
+    } else if(type == "asteroid") {
+      ellipse(0, 0, size*2, size*2);
+    }
+    // line(0, 0, move.x, move.y);
+    popMatrix();
+
+  }
+
+  public void update() {
+    move = new PVector(0, vel);
+    move = move.rotate(a);
+    pos.add(move);
+    //dodger moves
+  }
+
+  public boolean bounds() {
+    if(pos.x < 0-size*2/3 || pos.x > width+size*2/3 || pos.y < 0-size*2/3 || pos.y > height+size*2/3) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  public boolean collision() {
+    if(pos.dist(dodger.pos) <= (size+dodger.size) ) {
+      return true;
+    } else {
+      return false;
     }
   }
 }
