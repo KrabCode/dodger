@@ -30,7 +30,6 @@ int startVel;
 boolean clockwise;
 int rotVel, rotAcc;
 boolean gameOver;
-boolean gameStart;
 
 public void setup() {
   
@@ -38,7 +37,6 @@ public void setup() {
   logo = loadShape("logo.svg");
   shapeMode(CORNERS);
   gameOver = false;
-  gameStart = true;
   score = 0;
   // dodger attributes
   dodger = new Dodger(width/2, height/2, 0);
@@ -54,7 +52,7 @@ public void setup() {
 }
 
 public void draw() {
-  if(!gameOver || gameStart){
+  if(!gameOver){
     background(0, 0, 0, 20);
     dodger.update();
     dodger.bounds();
@@ -117,9 +115,8 @@ public void showScore() {
 }
 
 public void keyPressed() { // listen for user input
-  if(gameOver || gameStart){
+  if(gameOver){
     gameOver = !gameOver;
-    gameStart = false;
     setup();
   } else {
     if(!clockwise){
