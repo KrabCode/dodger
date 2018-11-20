@@ -3,10 +3,12 @@ Dodger dodger;
 Enemy enemy;
 boolean clockwise;
 int rotVel;
+boolean gameOver;
 
 void setup() {
   size(800,600);
   background(0);
+  gameOver = false;
   score = 0;
   hiscore = 0;
   dodger = new Dodger(width/2, height/2, 0);
@@ -15,16 +17,24 @@ void setup() {
 }
 
 void draw() {
-  background(0);
-  dodger.update();
-  dodger.bounds();
-  dodger.draw();
-  enemy.update();
-  if (enemy.bounds()) {
-    newEnemy();
+  if(!gameOver){
+    background(0);
+    dodger.update();
+    dodger.bounds();
+    dodger.draw();
+    enemy.update();
+    if (enemy.bounds()) {
+      newEnemy();
+    }
+    println(enemy.collision());
+    if(enemy.collision()){
+      gameOver = true;
+    }
+    enemy.draw();
+    score++;
+  } else {
+    showScore();
   }
-  println(enemy.collision());
-  enemy.draw();
 }
 
 void keyPressed() { //listen for user input
@@ -42,4 +52,13 @@ void keyReleased() { //listen for user input
 
 void newEnemy() {
   enemy = new Enemy(0, height/2, random(PI, TWO_PI), "asteroid");
+}
+
+void showScore() {
+  // draw score & high score
+  //wait for key input to start new game
+  background(0);
+  textSize(100);
+  textAlign(CENTER, CENTER);
+  text(score, width/2, height/2 -50);
 }
