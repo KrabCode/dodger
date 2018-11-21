@@ -5,6 +5,7 @@ class Enemy {
   PVector nPos;
   String type;
   //ship, asteroid
+  int hp; // health points of circle
   float a;
   float size;
   float vel;
@@ -18,14 +19,18 @@ class Enemy {
     size = 10 + score*scESize;
     size *= random(0.7, 1.3); // RNG for enemy size
     vel = _vel * random(0.2, 1.2) + score * scEVel;
-    for (int i=0; i < rndmAst.length; i++){
-      rndmAst[i] = random(4, size);
+    if(type == "asteroid"){
+      for (int i=0; i < rndmAst.length; i++){
+        rndmAst[i] = random(4, size);
+        hp = 20;
+      }
     }
     if(type == "ship"){
       //set angle to player
       PVector nPos = new PVector(-pos.x + dodger.pos.x, -pos.y + dodger.pos.y);
       a = nPos.heading() - HALF_PI;
-      vel *= 1.7;
+      vel *= 1.8;
+      hp = 30;
     }
   }
 

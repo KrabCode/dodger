@@ -5,7 +5,7 @@ int hiscore = 0;
 
 // Dodger
 Dodger dodger;
-int startVel = 5; // beginning velocity of dodger, increases by scVel for every score
+int startVel = 4; // beginning velocity of dodger, increases by scVel for every score
 float scVel = 0.05;
 float rotVel; // rotation velocity of dodger
 float rotAcc = 2; // rotation acceleration of dodger, increases by scAcc for every score
@@ -15,10 +15,10 @@ float scAcc = 0.04;
 int maxE = 40;
 Enemy[] enemies = new Enemy[maxE];
 int eNum;
-int sActive = 7; // enemies active at start
+int sActive = 9; // enemies active at start
 int eActive; // enemies currently active
 float limiter; // makes the arrow more narrow
-float startEVel = 4; // beginning velocity of enemies, increases by scEVel for every score
+float startEVel = 3; // beginning velocity of enemies, increases by scEVel for every score
 float scEVel = 0.03;
 float scESize = 0.2;
 
@@ -59,7 +59,7 @@ void draw() {
     fill(255);
     text(int(score), 30, 30);
     //adjust amount of enemies according to score
-    if(int(score/8 + sActive) > eActive && eActive < maxE) {
+    if(int(score/9 + sActive) > eActive && eActive < maxE) {
       eActive++;
     }
     for(eNum = 0; eNum < eActive; eNum++){
@@ -71,12 +71,16 @@ void draw() {
         gameOver = true;
       }
       if(enemies[eNum].circleCollision()){
-        if(enemies[eNum].circleTouched == false) {
-          score++;
+        enemies[eNum].hp--;
+        if(enemies[eNum].circleTouched == false && enemies[eNum].hp < 0) {
+          if(enemies[eNum].type == "ship") {
+            score += 2;
+          } else {
+            score++;
+          }
+          enemies[eNum].circleTouched = true;
         }
-        enemies[eNum].circleTouched = true;
       }
-
       enemies[eNum].draw();
     }
     dodger.update();

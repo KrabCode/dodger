@@ -21,7 +21,7 @@ int hiscore = 0;
 
 // Dodger
 Dodger dodger;
-int startVel = 5; // beginning velocity of dodger, increases by scVel for every score
+int startVel = 4; // beginning velocity of dodger, increases by scVel for every score
 float scVel = 0.05f;
 float rotVel; // rotation velocity of dodger
 float rotAcc = 2; // rotation acceleration of dodger, increases by scAcc for every score
@@ -31,10 +31,10 @@ float scAcc = 0.04f;
 int maxE = 40;
 Enemy[] enemies = new Enemy[maxE];
 int eNum;
-int sActive = 7; // enemies active at start
+int sActive = 9; // enemies active at start
 int eActive; // enemies currently active
 float limiter; // makes the arrow more narrow
-float startEVel = 4; // beginning velocity of enemies, increases by scEVel for every score
+float startEVel = 3; // beginning velocity of enemies, increases by scEVel for every score
 float scEVel = 0.03f;
 float scESize = 0.2f;
 
@@ -75,7 +75,7 @@ public void draw() {
     fill(255);
     text(PApplet.parseInt(score), 30, 30);
     //adjust amount of enemies according to score
-    if(PApplet.parseInt(score/8 + sActive) > eActive && eActive < maxE) {
+    if(PApplet.parseInt(score/9 + sActive) > eActive && eActive < maxE) {
       eActive++;
     }
     for(eNum = 0; eNum < eActive; eNum++){
@@ -87,12 +87,16 @@ public void draw() {
         gameOver = true;
       }
       if(enemies[eNum].circleCollision()){
-        if(enemies[eNum].circleTouched == false) {
-          score++;
+        enemies[eNum].hp--;
+        if(enemies[eNum].circleTouched == false && enemies[eNum].hp < 0) {
+          if(enemies[eNum].type == "ship") {
+            score += 2;
+          } else {
+            score++;
+          }
+          enemies[eNum].circleTouched = true;
         }
-        enemies[eNum].circleTouched = true;
       }
-
       enemies[eNum].draw();
     }
     dodger.update();
@@ -241,6 +245,7 @@ class Enemy {
   PVector nPos;
   String type;
   //ship, asteroid
+  int hp; // health points of circle
   float a;
   float size;
   float vel;
@@ -254,14 +259,18 @@ class Enemy {
     size = 10 + score*scESize;
     size *= random(0.7f, 1.3f); // RNG for enemy size
     vel = _vel * random(0.2f, 1.2f) + score * scEVel;
-    for (int i=0; i < rndmAst.length; i++){
-      rndmAst[i] = random(4, size);
+    if(type == "asteroid"){
+      for (int i=0; i < rndmAst.length; i++){
+        rndmAst[i] = random(4, size);
+        hp = 10;
+      }
     }
     if(type == "ship"){
       //set angle to player
       PVector nPos = new PVector(-pos.x + dodger.pos.x, -pos.y + dodger.pos.y);
       a = nPos.heading() - HALF_PI;
-      vel *= 1.7f;
+      vel *= 1.8f;
+      hp = 30;
     }
   }
 
