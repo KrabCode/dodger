@@ -59,9 +59,6 @@ public void draw() {
     textSize(30);
     fill(255);
     text(score, 30, 30);
-    dodger.update();
-    dodger.bounds();
-    dodger.draw();
     //adjust amount of enemies according to score
     if(PApplet.parseInt(score/200*pow(1.02f, eActive)) > eActive && eActive < 99) {
       eActive++;
@@ -83,6 +80,9 @@ public void draw() {
 
       enemies[eNum].draw();
     }
+    dodger.update();
+    dodger.bounds();
+    dodger.draw();
     rotVel += rotAcc;
   } else {
     showScore();
@@ -137,7 +137,7 @@ public void showScore() {
 }
 
 public void keyPressed() { // listen for user input
-  if(gameOver){
+  if(gameOver && keyCode == ' '){
     gameOver = !gameOver;
     setup();
   } else {
@@ -310,7 +310,7 @@ class Enemy {
   }
 
 }
-  public void settings() {  size(1200, 900); }
+  public void settings() {  size(1600, 1200); }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "dodger" };
     if (passedArgs != null) {

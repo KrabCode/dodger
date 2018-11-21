@@ -17,7 +17,7 @@ int rotVel, rotAcc;
 boolean gameOver;
 
 void setup() {
-  size(1200, 900);
+  size(1600, 1200);
   background(0);
   logo = loadShape("logo.svg");
   shapeMode(CORNERS);
@@ -43,9 +43,6 @@ void draw() {
     textSize(30);
     fill(255);
     text(score, 30, 30);
-    dodger.update();
-    dodger.bounds();
-    dodger.draw();
     //adjust amount of enemies according to score
     if(int(score/200*pow(1.02, eActive)) > eActive && eActive < 99) {
       eActive++;
@@ -67,6 +64,9 @@ void draw() {
 
       enemies[eNum].draw();
     }
+    dodger.update();
+    dodger.bounds();
+    dodger.draw();
     rotVel += rotAcc;
   } else {
     showScore();
@@ -121,7 +121,7 @@ void showScore() {
 }
 
 void keyPressed() { // listen for user input
-  if(gameOver){
+  if(gameOver && keyCode == ' '){
     gameOver = !gameOver;
     setup();
   } else {
