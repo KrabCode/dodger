@@ -22,14 +22,17 @@ Dodger dodger;
 
 Enemy[] enemies = new Enemy[99];
 int eNum;
+int sActive;
 int eActive;
 float limiter; // makes the arrow more narrow
 // Enemy enemy;
 int startVel;
 int circleFactor;
+float shipChance;
 
 boolean clockwise;
-int rotVel, rotAcc;
+int rotVel;
+float rotAcc;
 boolean gameOver;
 
 public void setup() {
@@ -42,11 +45,13 @@ public void setup() {
   // dodger attributes
   dodger = new Dodger(width/2, height/2, 0);
   rotVel = 20;
-  rotAcc = 1;
+  rotAcc = 2.4f;
   //enemy attributes
-  startVel = 3;
+  startVel = 2;
   limiter = 0.9f; // makes the arrow more narrow
+  sActive = 5;
   eActive = 5;
+  shipChance = 0.1f;
   circleFactor = 6;
   for(eNum = 0; eNum < enemies.length; eNum++) {
     newEnemy();
@@ -55,12 +60,13 @@ public void setup() {
 
 public void draw() {
   if(!gameOver){
+    rotAcc = 1.5f + score/50;
     background(0, 0, 0, 20);
     textSize(30);
     fill(255);
     text(score, 30, 30);
     //adjust amount of enemies according to score
-    if(PApplet.parseInt(score/200*pow(1.02f, eActive)) > eActive && eActive < 99) {
+    if(PApplet.parseInt(score/10 + sActive) > eActive) {
       eActive++;
     }
     for(eNum = 0; eNum < eActive; eNum++){
@@ -94,23 +100,30 @@ public void draw() {
 public void newEnemy() {
   int border;
   border = (int) random(4);
-  println(border);
+  float type;
+  type = random(1);
+  String thisType;
+  if(type > 1 -shipChance - score/300) {
+    thisType = "ship";
+  } else {
+    thisType = "asteroid";
+  }
 
   if(border == 0) {
     //left border
-    enemies[eNum] = new Enemy(0-180, random(height), random(PI + limiter, TWO_PI - limiter), startVel, "ship");
+    enemies[eNum] = new Enemy(0-180, random(height), random(PI + limiter, TWO_PI - limiter), startVel, thisType);
   }
   if(border == 1) {
     //top border
-    enemies[eNum] = new Enemy(random(width), 0-180, random(HALF_PI + PI + limiter, 3*QUARTER_PI - limiter), startVel, "ship");
+    enemies[eNum] = new Enemy(random(width), 0-180, random(HALF_PI + PI + limiter, 3*QUARTER_PI - limiter), startVel, thisType);
   }
   if(border == 2) {
     //right border
-    enemies[eNum] = new Enemy(width+180, random(height), random(TWO_PI + limiter, TWO_PI + PI - limiter), startVel, "ship");
+    enemies[eNum] = new Enemy(width+180, random(height), random(TWO_PI + limiter, TWO_PI + PI - limiter), startVel, thisType);
   }
   if(border == 3) {
     //bottom border
-    enemies[eNum] = new Enemy(random(height), height+180, random(3*QUARTER_PI + limiter, HALF_PI + PI - limiter), startVel, "ship");
+    enemies[eNum] = new Enemy(random(height), height+180, random(3*QUARTER_PI + limiter, HALF_PI + PI - limiter), startVel, thisType);
   }
 
   startVel += 0.1f;
@@ -125,7 +138,7 @@ public void showScore() {
   textAlign(CENTER, CENTER);
   // draw logo
   int border = 15;
-  shape(logo, border, border+300, width-border, 550);
+  shape(logo, border, border+500, width-border, 750);
   //update score
   if (score > hiscore){
     hiscore = score;
@@ -164,7 +177,7 @@ class Dodger {
   PVector move;
   float a;
   float size = 25;
-  float vel = 5;
+  float vel = 6;
 
   Dodger (float _x, float _y, float _a) {
     pos = new PVector(_x, _y);
@@ -189,8 +202,8 @@ class Dodger {
 
   public void update() {
     //dodger moves
-    move = new PVector(0, vel);
-    if(clockwise){
+    move = new PVector(0, vel + score*0.15f);
+    if(!clockwise){
       a -= 0.001f * rotVel;
     } else {
       a += 0.001f * rotVel;
@@ -249,13 +262,11 @@ class Enemy {
     translate(pos.x, pos.y);
     rotate(a);
     // rect(0, 0, sin(a)*30, 50);
-    if(circleTouched) {
-      fill(112, 255, 169, 100);
-    } else {
-      fill(255, 107, 107, 100);
+    if(!circleTouched) {
+      fill(255, 255, 255, 50);
+      noStroke();
+      ellipse(0, 0, 2*size*circleFactor, 2*size*circleFactor);
     }
-    noStroke();
-    ellipse(0, 0, 2*size*circleFactor, 2*size*circleFactor);
     stroke(255);
     strokeWeight(6);
     if(type == "ship") {
@@ -316,7 +327,7 @@ class Enemy {
   }
 
 }
-  public void settings() {  size(1600, 1200); }
+  public void settings() {  size(1900, 1200); }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "dodger" };
     if (passedArgs != null) {

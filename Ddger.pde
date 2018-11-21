@@ -5,7 +5,7 @@ class Dodger {
   PVector move;
   float a;
   float size = 25;
-  float vel = 5;
+  float vel = 6;
 
   Dodger (float _x, float _y, float _a) {
     pos = new PVector(_x, _y);
@@ -30,8 +30,8 @@ class Dodger {
 
   void update() {
     //dodger moves
-    move = new PVector(0, vel);
-    if(clockwise){
+    move = new PVector(0, vel + score*0.15);
+    if(!clockwise){
       a -= 0.001 * rotVel;
     } else {
       a += 0.001 * rotVel;

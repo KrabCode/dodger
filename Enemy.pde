@@ -35,13 +35,11 @@ class Enemy {
     translate(pos.x, pos.y);
     rotate(a);
     // rect(0, 0, sin(a)*30, 50);
-    if(circleTouched) {
-      fill(112, 255, 169, 100);
-    } else {
-      fill(255, 107, 107, 100);
+    if(!circleTouched) {
+      fill(255, 255, 255, 50);
+      noStroke();
+      ellipse(0, 0, 2*size*circleFactor, 2*size*circleFactor);
     }
-    noStroke();
-    ellipse(0, 0, 2*size*circleFactor, 2*size*circleFactor);
     stroke(255);
     strokeWeight(6);
     if(type == "ship") {
