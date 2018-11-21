@@ -16,22 +16,37 @@ class Enemy {
     pos = new PVector(_x, _y);
     a = _a;
     type = _type;
-    size = 10 + score*scESize;
-    size *= random(0.7, 1.3); // RNG for enemy size
-    vel = _vel * random(0.2, 1.2) + score * scEVel;
+    size = 50 + score*scESize;
+    size *= random(0.6, 1.4); // RNG for enemy size
+    vel = _vel * random(0.8, 1.2) + score * scEVel;
     if(type == "asteroid"){
       for (int i=0; i < rndmAst.length; i++){
         rndmAst[i] = random(4, size);
-        hp = 20;
+        hp = 40 + int(score/2);
       }
     }
     if(type == "ship"){
       //set angle to player
       PVector nPos = new PVector(-pos.x + dodger.pos.x, -pos.y + dodger.pos.y);
       a = nPos.heading() - HALF_PI;
-      vel *= 1.8;
-      hp = 30;
+      vel *= 2.4;
+      hp = 20 + int(score/3);
     }
+  }
+
+  void drawCircle() {
+    pushMatrix();
+    translate(pos.x, pos.y);
+    if(!circleTouched) {
+      noStroke();
+      fill(255, 255, 255, 5 + hp);
+      ellipse(0, 0, 2*size*circleFactor + circleAdd, 2*size*circleFactor + circleAdd);
+      noStroke();
+      // //comment to remove lag
+      // fill(255, 255, 255, min(255, 5 + 2*hp));
+      // ellipse(0, 0, 0.3*(size*circleFactor + circleAdd), 0.3*(size*circleFactor + circleAdd));
+    }
+    popMatrix();
   }
 
   void draw() {
@@ -41,34 +56,35 @@ class Enemy {
     pushMatrix();
     translate(pos.x, pos.y);
     rotate(a);
-    // rect(0, 0, sin(a)*30, 50);
     if(!circleTouched) {
-      fill(255, 255, 255, 25);
-      noStroke();
-
-
-      ellipse(0, 0, 2*size*circleFactor + circleAdd, 2*size*circleFactor + circleAdd);
+      stroke(255);
+      fill(0);
+    } else {
+      stroke(255);
+      fill(255);
     }
-    stroke(255);
-    strokeWeight(6);
+    strokeWeight(3);
     if(type == "ship") {
-      line(-0.5 * size, -1 * size, 0, 1 * size);
-      line(0.5 * size, -1 * size, 0, 1 * size);
-      line(-0.5 * size, -1 * size, 0, 0);
-      line(0.5 * size, -1 * size, 0, 0);
+      // line(-0.5 * size, -1 * size, 0, 1 * size);
+      // line(0, 1 * size, 0.5 * size, -1 * size);
+      // line(0.5 * size, -1 * size, 0, 0);
+      // line(0, 0, -0.5 * size, -1 * size);
+      beginShape();
+        vertex(-0.5 * size,   -1 * size);
+        vertex(0          ,    1 * size);
+        vertex(0.5 * size ,   -1 * size);
+        vertex(0          , -0.3 * size);
+        vertex(-0.5 * size,   -1 * size);
+      endShape();
     } else if(type == "asteroid") {
       rotate(frameCount*0.01);
-          fill(255);
           beginShape();
-            vertex(0, -rndmAst[1]);//oben
-            // vertex(rndmAst[0], -12);
-            vertex(rndmAst[2], 0);//rechts
-            // vertex(12, rndmAst[4]);
-            vertex(0, rndmAst[3]);//unte
-            // vertex(-12, 12);
-            vertex(-rndmAst[4], 0);//links
+            vertex(0, -rndmAst[1]);
+            vertex(rndmAst[2], 0);
+            vertex(0, rndmAst[3]);
+            vertex(-rndmAst[4], 0);
             vertex(-12, -12);
-            vertex(0, -rndmAst[1]);//oben
+            vertex(0, -rndmAst[1]);
           endShape();
       }
 
@@ -94,7 +110,7 @@ class Enemy {
   }
 
   boolean collision() {
-    if(pos.dist(dodger.pos) <= (0.9*(size+dodger.size)) ) {
+    if(pos.dist(dodger.pos) <= (0.5*(size+dodger.size)) ) {
       return true;
     } else {
       return false;

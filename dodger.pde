@@ -15,15 +15,15 @@ float scAcc = 0.04;
 int maxE = 40;
 Enemy[] enemies = new Enemy[maxE];
 int eNum;
-int sActive = 9; // enemies active at start
+int sActive = 8; // enemies active at start
 int eActive; // enemies currently active
 float limiter; // makes the arrow more narrow
-float startEVel = 3; // beginning velocity of enemies, increases by scEVel for every score
-float scEVel = 0.03;
+float startEVel = 2; // beginning velocity of enemies, increases by scEVel for every score
+float scEVel = 0.02;
 float scESize = 0.2;
 
-int circleFactor = 5;
-int circleAdd = 150;
+int circleFactor = 2;
+int circleAdd = 220;
 float shipChance;
 
 boolean clockwise;
@@ -44,7 +44,7 @@ void setup() {
 
   //enemy attributes
   limiter = 0.7;
-  eActive = 5;
+  eActive = sActive;
   shipChance = 0.15; //starting chance for spawn to be ship, increases with score as well
   for(eNum = 0; eNum < enemies.length; eNum++) {
     newEnemy();
@@ -57,9 +57,9 @@ void draw() {
     background(0, 0, 0, 20);
     textSize(30);
     fill(255);
-    text(int(score), 30, 30);
+    // text(int(score), 30, 30);
     //adjust amount of enemies according to score
-    if(int(score/9 + sActive) > eActive && eActive < maxE) {
+    if(int(score/11 + sActive) > eActive && eActive < maxE) {
       eActive++;
     }
     for(eNum = 0; eNum < eActive; eNum++){
@@ -74,13 +74,17 @@ void draw() {
         enemies[eNum].hp--;
         if(enemies[eNum].circleTouched == false && enemies[eNum].hp < 0) {
           if(enemies[eNum].type == "ship") {
-            score += 2;
+            score++;
           } else {
             score++;
           }
           enemies[eNum].circleTouched = true;
+          enemies[eNum].vel *= 0.7;
         }
       }
+      enemies[eNum].drawCircle();
+    }
+    for(eNum = 0; eNum < eActive; eNum++){
       enemies[eNum].draw();
     }
     dodger.update();
@@ -128,7 +132,7 @@ void newEnemy() {
 
 void showScore() {
   background(0);
-  textSize(100);
+  textSize(150);
   fill(255);
   stroke(255);
   strokeWeight(6);
@@ -141,8 +145,8 @@ void showScore() {
     hiscore = int(score);
   }
   // draw menu, score & high score
-  text(int(score), width*1/4, height*3/4 -50);
-  text(hiscore, width*3/4, height*3/4 -50);
+  text(int(score), width*2/4, height*3/4 -50);
+  text(hiscore, width*2/4, height*1/4 -50);
   // wait for key input to start new game
 }
 

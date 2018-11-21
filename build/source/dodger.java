@@ -31,15 +31,15 @@ float scAcc = 0.04f;
 int maxE = 40;
 Enemy[] enemies = new Enemy[maxE];
 int eNum;
-int sActive = 9; // enemies active at start
+int sActive = 8; // enemies active at start
 int eActive; // enemies currently active
 float limiter; // makes the arrow more narrow
-float startEVel = 3; // beginning velocity of enemies, increases by scEVel for every score
-float scEVel = 0.03f;
+float startEVel = 2; // beginning velocity of enemies, increases by scEVel for every score
+float scEVel = 0.02f;
 float scESize = 0.2f;
 
-int circleFactor = 5;
-int circleAdd = 150;
+int circleFactor = 2;
+int circleAdd = 220;
 float shipChance;
 
 boolean clockwise;
@@ -60,7 +60,7 @@ public void setup() {
 
   //enemy attributes
   limiter = 0.7f;
-  eActive = 5;
+  eActive = sActive;
   shipChance = 0.15f; //starting chance for spawn to be ship, increases with score as well
   for(eNum = 0; eNum < enemies.length; eNum++) {
     newEnemy();
@@ -73,9 +73,9 @@ public void draw() {
     background(0, 0, 0, 20);
     textSize(30);
     fill(255);
-    text(PApplet.parseInt(score), 30, 30);
+    // text(int(score), 30, 30);
     //adjust amount of enemies according to score
-    if(PApplet.parseInt(score/9 + sActive) > eActive && eActive < maxE) {
+    if(PApplet.parseInt(score/11 + sActive) > eActive && eActive < maxE) {
       eActive++;
     }
     for(eNum = 0; eNum < eActive; eNum++){
@@ -90,13 +90,17 @@ public void draw() {
         enemies[eNum].hp--;
         if(enemies[eNum].circleTouched == false && enemies[eNum].hp < 0) {
           if(enemies[eNum].type == "ship") {
-            score += 2;
+            score++;
           } else {
             score++;
           }
           enemies[eNum].circleTouched = true;
+          enemies[eNum].vel *= 0.7f;
         }
       }
+      enemies[eNum].drawCircle();
+    }
+    for(eNum = 0; eNum < eActive; eNum++){
       enemies[eNum].draw();
     }
     dodger.update();
@@ -144,7 +148,7 @@ public void newEnemy() {
 
 public void showScore() {
   background(0);
-  textSize(100);
+  textSize(150);
   fill(255);
   stroke(255);
   strokeWeight(6);
@@ -157,8 +161,8 @@ public void showScore() {
     hiscore = PApplet.parseInt(score);
   }
   // draw menu, score & high score
-  text(PApplet.parseInt(score), width*1/4, height*3/4 -50);
-  text(hiscore, width*3/4, height*3/4 -50);
+  text(PApplet.parseInt(score), width*2/4, height*3/4 -50);
+  text(hiscore, width*2/4, height*1/4 -50);
   // wait for key input to start new game
 }
 
@@ -256,22 +260,37 @@ class Enemy {
     pos = new PVector(_x, _y);
     a = _a;
     type = _type;
-    size = 10 + score*scESize;
-    size *= random(0.7f, 1.3f); // RNG for enemy size
-    vel = _vel * random(0.2f, 1.2f) + score * scEVel;
+    size = 50 + score*scESize;
+    size *= random(0.6f, 1.4f); // RNG for enemy size
+    vel = _vel * random(0.8f, 1.2f) + score * scEVel;
     if(type == "asteroid"){
       for (int i=0; i < rndmAst.length; i++){
         rndmAst[i] = random(4, size);
-        hp = 10;
+        hp = 40 + PApplet.parseInt(score/2);
       }
     }
     if(type == "ship"){
       //set angle to player
       PVector nPos = new PVector(-pos.x + dodger.pos.x, -pos.y + dodger.pos.y);
       a = nPos.heading() - HALF_PI;
-      vel *= 1.8f;
-      hp = 30;
+      vel *= 2.4f;
+      hp = 20 + PApplet.parseInt(score/3);
     }
+  }
+
+  public void drawCircle() {
+    pushMatrix();
+    translate(pos.x, pos.y);
+    if(!circleTouched) {
+      noStroke();
+      fill(255, 255, 255, 5 + hp);
+      ellipse(0, 0, 2*size*circleFactor + circleAdd, 2*size*circleFactor + circleAdd);
+      noStroke();
+      // //comment to remove lag
+      // fill(255, 255, 255, min(255, 5 + 2*hp));
+      // ellipse(0, 0, 0.3*(size*circleFactor + circleAdd), 0.3*(size*circleFactor + circleAdd));
+    }
+    popMatrix();
   }
 
   public void draw() {
@@ -281,34 +300,35 @@ class Enemy {
     pushMatrix();
     translate(pos.x, pos.y);
     rotate(a);
-    // rect(0, 0, sin(a)*30, 50);
     if(!circleTouched) {
-      fill(255, 255, 255, 25);
-      noStroke();
-
-
-      ellipse(0, 0, 2*size*circleFactor + circleAdd, 2*size*circleFactor + circleAdd);
+      stroke(255);
+      fill(0);
+    } else {
+      stroke(255);
+      fill(255);
     }
-    stroke(255);
-    strokeWeight(6);
+    strokeWeight(3);
     if(type == "ship") {
-      line(-0.5f * size, -1 * size, 0, 1 * size);
-      line(0.5f * size, -1 * size, 0, 1 * size);
-      line(-0.5f * size, -1 * size, 0, 0);
-      line(0.5f * size, -1 * size, 0, 0);
+      // line(-0.5 * size, -1 * size, 0, 1 * size);
+      // line(0, 1 * size, 0.5 * size, -1 * size);
+      // line(0.5 * size, -1 * size, 0, 0);
+      // line(0, 0, -0.5 * size, -1 * size);
+      beginShape();
+        vertex(-0.5f * size,   -1 * size);
+        vertex(0          ,    1 * size);
+        vertex(0.5f * size ,   -1 * size);
+        vertex(0          , -0.3f * size);
+        vertex(-0.5f * size,   -1 * size);
+      endShape();
     } else if(type == "asteroid") {
       rotate(frameCount*0.01f);
-          fill(255);
           beginShape();
-            vertex(0, -rndmAst[1]);//oben
-            // vertex(rndmAst[0], -12);
-            vertex(rndmAst[2], 0);//rechts
-            // vertex(12, rndmAst[4]);
-            vertex(0, rndmAst[3]);//unte
-            // vertex(-12, 12);
-            vertex(-rndmAst[4], 0);//links
+            vertex(0, -rndmAst[1]);
+            vertex(rndmAst[2], 0);
+            vertex(0, rndmAst[3]);
+            vertex(-rndmAst[4], 0);
             vertex(-12, -12);
-            vertex(0, -rndmAst[1]);//oben
+            vertex(0, -rndmAst[1]);
           endShape();
       }
 
@@ -334,7 +354,7 @@ class Enemy {
   }
 
   public boolean collision() {
-    if(pos.dist(dodger.pos) <= (0.9f*(size+dodger.size)) ) {
+    if(pos.dist(dodger.pos) <= (0.5f*(size+dodger.size)) ) {
       return true;
     } else {
       return false;
