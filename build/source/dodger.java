@@ -31,7 +31,7 @@ float scAcc = 0.04f;
 int maxE = 40;
 Enemy[] enemies = new Enemy[maxE];
 int eNum;
-int sActive = 8; // enemies active at start
+int sActive = 10; // enemies active at start
 int eActive; // enemies currently active
 float limiter; // makes the arrow more narrow
 float startEVel = 2; // beginning velocity of enemies, increases by scEVel for every score
@@ -345,8 +345,8 @@ class Enemy {
   }
 
   public boolean bounds() {
-    if(pos.x < 0-0.1f*size*(circleFactor+circleAdd) || pos.x > width+0.1f*size*(circleFactor+circleAdd)
-    || pos.y < 0-0.1f*size*(circleFactor+circleAdd) || pos.y > height+0.1f*size*(circleFactor+circleAdd) ) {
+    if(pos.x < 0-2*(circleFactor+circleAdd) || pos.x > width+2*(circleFactor+circleAdd)
+    || pos.y < 0-2*(circleFactor+circleAdd) || pos.y > height+2*(circleFactor+circleAdd) ) {
       return true;
     } else {
       return false;

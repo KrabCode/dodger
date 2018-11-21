@@ -101,8 +101,8 @@ class Enemy {
   }
 
   boolean bounds() {
-    if(pos.x < 0-0.1*size*(circleFactor+circleAdd) || pos.x > width+0.1*size*(circleFactor+circleAdd)
-    || pos.y < 0-0.1*size*(circleFactor+circleAdd) || pos.y > height+0.1*size*(circleFactor+circleAdd) ) {
+    if(pos.x < 0-2*(circleFactor+circleAdd) || pos.x > width+2*(circleFactor+circleAdd)
+    || pos.y < 0-2*(circleFactor+circleAdd) || pos.y > height+2*(circleFactor+circleAdd) ) {
       return true;
     } else {
       return false;

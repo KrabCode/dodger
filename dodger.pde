@@ -15,7 +15,7 @@ float scAcc = 0.04;
 int maxE = 40;
 Enemy[] enemies = new Enemy[maxE];
 int eNum;
-int sActive = 8; // enemies active at start
+int sActive = 10; // enemies active at start
 int eActive; // enemies currently active
 float limiter; // makes the arrow more narrow
 float startEVel = 2; // beginning velocity of enemies, increases by scEVel for every score
