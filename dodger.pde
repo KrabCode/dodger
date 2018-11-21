@@ -28,7 +28,7 @@ void setup() {
   rotAcc = 1;
   //enemy attributes
   startVel = 3;
-  limiter = 0.5; // makes the arrow more narrow
+  limiter = 0.9; // makes the arrow more narrow
   eActive = 3;
   for(eNum = 0; eNum < enemies.length; eNum++) {
     newEnemy();
@@ -70,10 +70,12 @@ void newEnemy() {
   println(border);
 
   if(border == 0 || border == 1) {
-    enemies[eNum] = new Enemy(0, random(height), random(PI + limiter, TWO_PI - limiter), startVel, "asteroid");
+    //left border
+    enemies[eNum] = new Enemy(0-180, random(height), random(PI + limiter, TWO_PI - limiter), startVel, "asteroid");
   }
   if(border == 2 || border == 3) {
-    enemies[eNum] = new Enemy(width, random(height), random(TWO_PI + limiter, TWO_PI + PI - limiter), startVel, "ship");
+    //right border
+    enemies[eNum] = new Enemy(width+180, random(height), random(TWO_PI + limiter, TWO_PI + PI - limiter), startVel, "ship");
   }
 
   startVel += 0.1;

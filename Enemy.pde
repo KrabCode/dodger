@@ -27,6 +27,9 @@ class Enemy {
     translate(pos.x, pos.y);
     rotate(a);
     // rect(0, 0, sin(a)*30, 50);
+    fill(255, 255, 255, 100);
+    noStroke();
+    ellipse(0, 0, size*15, size*15);
     stroke(255);
     strokeWeight(6);
     if(type == "ship") {
@@ -34,11 +37,9 @@ class Enemy {
       line(0.5 * size, -1 * size, 0, 1 * size);
       line(-0.5 * size, -1 * size, 0, 0);
       line(0.5 * size, -1 * size, 0, 0);
-      fill(255, 255, 255, 100);
-      noStroke();
-      ellipse(0, 0, size*15, size*15);
     } else if(type == "asteroid") {
       rotate(frameCount*0.01);
+          fill(255);
           beginShape();
             vertex(0, -rndmAst[1]);//oben
             vertex(rndmAst[0], -12);
@@ -50,10 +51,8 @@ class Enemy {
             vertex(-12, -12);
             vertex(0, -rndmAst[1]);//oben
           endShape();
-          fill(255, 255, 255, 100);
-          noStroke();
-          ellipse(0, 0, size*15, size*15);
       }
+
     // line(0, 0, move.x, move.y);
     popMatrix();
 
@@ -67,7 +66,7 @@ class Enemy {
   }
 
   boolean bounds() {
-    if(pos.x < 0-size*2/3 || pos.x > width+size*2/3 || pos.y < 0-size*2/3 || pos.y > height+size*2/3) {
+    if(pos.x < 0-size*12 || pos.x > width+size*12 || pos.y < 0-size*12 || pos.y > height+size*12) {
       return true;
     } else {
       return false;
