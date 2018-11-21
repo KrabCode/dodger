@@ -10,6 +10,7 @@ int eActive;
 float limiter; // makes the arrow more narrow
 // Enemy enemy;
 int startVel;
+int circleFactor;
 
 boolean clockwise;
 int rotVel, rotAcc;
@@ -29,7 +30,8 @@ void setup() {
   //enemy attributes
   startVel = 3;
   limiter = 0.9; // makes the arrow more narrow
-  eActive = 3;
+  eActive = 5;
+  circleFactor = 6;
   for(eNum = 0; eNum < enemies.length; eNum++) {
     newEnemy();
   }
@@ -38,6 +40,9 @@ void setup() {
 void draw() {
   if(!gameOver){
     background(0, 0, 0, 20);
+    textSize(30);
+    fill(255);
+    text(score, 30, 30);
     dodger.update();
     dodger.bounds();
     dodger.draw();
@@ -48,12 +53,18 @@ void draw() {
     for(eNum = 0; eNum < eActive; eNum++){
       enemies[eNum].update();
       if (enemies[eNum].bounds()) {
-        score++;
         newEnemy();
       }
       if(enemies[eNum].collision()){
         gameOver = true;
       }
+      if(enemies[eNum].circleCollision()){
+        if(enemies[eNum].circleTouched == false) {
+          score++;
+        }
+        enemies[eNum].circleTouched = true;
+      }
+
       enemies[eNum].draw();
     }
     rotVel += rotAcc;
@@ -69,13 +80,21 @@ void newEnemy() {
   border = (int) random(4);
   println(border);
 
-  if(border == 0 || border == 1) {
+  if(border == 0) {
     //left border
     enemies[eNum] = new Enemy(0-180, random(height), random(PI + limiter, TWO_PI - limiter), startVel, "asteroid");
   }
-  if(border == 2 || border == 3) {
+  if(border == 1) {
+    //top border
+    enemies[eNum] = new Enemy(random(width), 0-180, random(HALF_PI + PI + limiter, 3*QUARTER_PI - limiter), startVel, "asteroid");
+  }
+  if(border == 2) {
     //right border
     enemies[eNum] = new Enemy(width+180, random(height), random(TWO_PI + limiter, TWO_PI + PI - limiter), startVel, "ship");
+  }
+  if(border == 3) {
+    //bottom border
+    enemies[eNum] = new Enemy(random(height), height+180, random(3*QUARTER_PI + limiter, HALF_PI + PI - limiter), startVel, "ship");
   }
 
   startVel += 0.1;
@@ -84,19 +103,20 @@ void newEnemy() {
 void showScore() {
   background(0);
   textSize(100);
+  fill(255);
   stroke(255);
   strokeWeight(6);
   textAlign(CENTER, CENTER);
   // draw logo
   int border = 15;
-  shape(logo, border, border+120, width-border, 250);
+  shape(logo, border, border+300, width-border, 550);
   //update score
   if (score > hiscore){
     hiscore = score;
   }
   // draw menu, score & high score
-  text(score, width*1/4, height*2/3 -50);
-  text(hiscore, width*3/4, height*2/3 -50);
+  text(score, width*1/4, height*3/4 -50);
+  text(hiscore, width*3/4, height*3/4 -50);
   // wait for key input to start new game
 }
 

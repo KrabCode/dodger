@@ -26,6 +26,7 @@ int eActive;
 float limiter; // makes the arrow more narrow
 // Enemy enemy;
 int startVel;
+int circleFactor;
 
 boolean clockwise;
 int rotVel, rotAcc;
@@ -45,7 +46,8 @@ public void setup() {
   //enemy attributes
   startVel = 3;
   limiter = 0.9f; // makes the arrow more narrow
-  eActive = 3;
+  eActive = 5;
+  circleFactor = 6;
   for(eNum = 0; eNum < enemies.length; eNum++) {
     newEnemy();
   }
@@ -54,6 +56,9 @@ public void setup() {
 public void draw() {
   if(!gameOver){
     background(0, 0, 0, 20);
+    textSize(30);
+    fill(255);
+    text(score, 30, 30);
     dodger.update();
     dodger.bounds();
     dodger.draw();
@@ -64,12 +69,18 @@ public void draw() {
     for(eNum = 0; eNum < eActive; eNum++){
       enemies[eNum].update();
       if (enemies[eNum].bounds()) {
-        score++;
         newEnemy();
       }
       if(enemies[eNum].collision()){
         gameOver = true;
       }
+      if(enemies[eNum].circleCollision()){
+        if(enemies[eNum].circleTouched == false) {
+          score++;
+        }
+        enemies[eNum].circleTouched = true;
+      }
+
       enemies[eNum].draw();
     }
     rotVel += rotAcc;
@@ -85,13 +96,21 @@ public void newEnemy() {
   border = (int) random(4);
   println(border);
 
-  if(border == 0 || border == 1) {
+  if(border == 0) {
     //left border
     enemies[eNum] = new Enemy(0-180, random(height), random(PI + limiter, TWO_PI - limiter), startVel, "asteroid");
   }
-  if(border == 2 || border == 3) {
+  if(border == 1) {
+    //top border
+    enemies[eNum] = new Enemy(random(width), 0-180, random(HALF_PI + PI + limiter, 3*QUARTER_PI - limiter), startVel, "asteroid");
+  }
+  if(border == 2) {
     //right border
     enemies[eNum] = new Enemy(width+180, random(height), random(TWO_PI + limiter, TWO_PI + PI - limiter), startVel, "ship");
+  }
+  if(border == 3) {
+    //bottom border
+    enemies[eNum] = new Enemy(random(height), height+180, random(3*QUARTER_PI + limiter, HALF_PI + PI - limiter), startVel, "ship");
   }
 
   startVel += 0.1f;
@@ -100,19 +119,20 @@ public void newEnemy() {
 public void showScore() {
   background(0);
   textSize(100);
+  fill(255);
   stroke(255);
   strokeWeight(6);
   textAlign(CENTER, CENTER);
   // draw logo
   int border = 15;
-  shape(logo, border, border+120, width-border, 250);
+  shape(logo, border, border+300, width-border, 550);
   //update score
   if (score > hiscore){
     hiscore = score;
   }
   // draw menu, score & high score
-  text(score, width*1/4, height*2/3 -50);
-  text(hiscore, width*3/4, height*2/3 -50);
+  text(score, width*1/4, height*3/4 -50);
+  text(hiscore, width*3/4, height*3/4 -50);
   // wait for key input to start new game
 }
 
@@ -202,12 +222,14 @@ class Enemy {
   float size = 18;
   float vel;
   float [] rndmAst = new float[16]; //random zahlen array fuer asteroid vertex
+  boolean circleTouched = false;
+  int circleFactor = 12;
 
   Enemy (float _x, float _y, float _a, float _vel, String _type) {
     pos = new PVector(_x, _y);
     a = _a;
     type = _type;
-    vel = _vel;
+    vel = _vel * random(0.8f, 1.2f);
     for (int i=0; i < rndmAst.length; i++){
       rndmAst[i] = random(4, size);
     }
@@ -221,9 +243,13 @@ class Enemy {
     translate(pos.x, pos.y);
     rotate(a);
     // rect(0, 0, sin(a)*30, 50);
-    fill(255, 255, 255, 100);
+    if(circleTouched) {
+      fill(112, 255, 169, 100);
+    } else {
+      fill(255, 107, 107, 100);
+    }
     noStroke();
-    ellipse(0, 0, size*15, size*15);
+    ellipse(0, 0, 2*size*circleFactor, 2*size*circleFactor);
     stroke(255);
     strokeWeight(6);
     if(type == "ship") {
@@ -260,7 +286,7 @@ class Enemy {
   }
 
   public boolean bounds() {
-    if(pos.x < 0-size*12 || pos.x > width+size*12 || pos.y < 0-size*12 || pos.y > height+size*12) {
+    if(pos.x < 0-size*circleFactor || pos.x > width+size*circleFactor || pos.y < 0-size*circleFactor || pos.y > height+size*circleFactor) {
       return true;
     } else {
       return false;
@@ -274,6 +300,15 @@ class Enemy {
       return false;
     }
   }
+
+  public boolean circleCollision() {
+    if(pos.dist(dodger.pos) <= (circleFactor*size+dodger.size) ) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
 }
   public void settings() {  size(1200, 900); }
   static public void main(String[] passedArgs) {

@@ -8,12 +8,14 @@ class Enemy {
   float size = 18;
   float vel;
   float [] rndmAst = new float[16]; //random zahlen array fuer asteroid vertex
+  boolean circleTouched = false;
+  int circleFactor = 12;
 
   Enemy (float _x, float _y, float _a, float _vel, String _type) {
     pos = new PVector(_x, _y);
     a = _a;
     type = _type;
-    vel = _vel;
+    vel = _vel * random(0.8, 1.2);
     for (int i=0; i < rndmAst.length; i++){
       rndmAst[i] = random(4, size);
     }
@@ -27,9 +29,13 @@ class Enemy {
     translate(pos.x, pos.y);
     rotate(a);
     // rect(0, 0, sin(a)*30, 50);
-    fill(255, 255, 255, 100);
+    if(circleTouched) {
+      fill(112, 255, 169, 100);
+    } else {
+      fill(255, 107, 107, 100);
+    }
     noStroke();
-    ellipse(0, 0, size*15, size*15);
+    ellipse(0, 0, 2*size*circleFactor, 2*size*circleFactor);
     stroke(255);
     strokeWeight(6);
     if(type == "ship") {
@@ -66,7 +72,7 @@ class Enemy {
   }
 
   boolean bounds() {
-    if(pos.x < 0-size*12 || pos.x > width+size*12 || pos.y < 0-size*12 || pos.y > height+size*12) {
+    if(pos.x < 0-size*circleFactor || pos.x > width+size*circleFactor || pos.y < 0-size*circleFactor || pos.y > height+size*circleFactor) {
       return true;
     } else {
       return false;
@@ -80,4 +86,13 @@ class Enemy {
       return false;
     }
   }
+
+  boolean circleCollision() {
+    if(pos.dist(dodger.pos) <= (circleFactor*size+dodger.size) ) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
 }
