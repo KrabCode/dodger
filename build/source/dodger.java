@@ -16,27 +16,39 @@ public class dodger extends PApplet {
 
 PShape logo;
 
-int score;
+float score;
 int hiscore = 0;
-Dodger dodger;
 
-Enemy[] enemies = new Enemy[99];
+// Dodger
+Dodger dodger;
+int startVel = 5; // beginning velocity of dodger, increases by scVel for every score
+float scVel = 0.05f;
+float rotVel; // rotation velocity of dodger
+float rotAcc = 2; // rotation acceleration of dodger, increases by scAcc for every score
+float scAcc = 0.04f;
+
+// Enemy
+int maxE = 40;
+Enemy[] enemies = new Enemy[maxE];
 int eNum;
-int sActive;
-int eActive;
+int sActive = 7; // enemies active at start
+int eActive; // enemies currently active
 float limiter; // makes the arrow more narrow
-// Enemy enemy;
-int startVel;
-int circleFactor;
+float startEVel = 4; // beginning velocity of enemies, increases by scEVel for every score
+float scEVel = 0.03f;
+float scESize = 0.2f;
+
+int circleFactor = 5;
+int circleAdd = 150;
 float shipChance;
 
 boolean clockwise;
-int rotVel;
-float rotAcc;
 boolean gameOver;
 
 public void setup() {
   
+  
+  noCursor();
   background(0);
   logo = loadShape("logo.svg");
   shapeMode(CORNERS);
@@ -45,14 +57,11 @@ public void setup() {
   // dodger attributes
   dodger = new Dodger(width/2, height/2, 0);
   rotVel = 20;
-  rotAcc = 2.4f;
+
   //enemy attributes
-  startVel = 2;
-  limiter = 0.9f; // makes the arrow more narrow
-  sActive = 5;
+  limiter = 0.7f;
   eActive = 5;
-  shipChance = 0.1f;
-  circleFactor = 6;
+  shipChance = 0.15f; //starting chance for spawn to be ship, increases with score as well
   for(eNum = 0; eNum < enemies.length; eNum++) {
     newEnemy();
   }
@@ -60,13 +69,13 @@ public void setup() {
 
 public void draw() {
   if(!gameOver){
-    rotAcc = 1.5f + score/50;
+    rotAcc = 1.5f + score*scAcc;
     background(0, 0, 0, 20);
     textSize(30);
     fill(255);
-    text(score, 30, 30);
+    text(PApplet.parseInt(score), 30, 30);
     //adjust amount of enemies according to score
-    if(PApplet.parseInt(score/10 + sActive) > eActive) {
+    if(PApplet.parseInt(score/8 + sActive) > eActive && eActive < maxE) {
       eActive++;
     }
     for(eNum = 0; eNum < eActive; eNum++){
@@ -103,7 +112,7 @@ public void newEnemy() {
   float type;
   type = random(1);
   String thisType;
-  if(type > 1 -shipChance - score/300) {
+  if(type > 1 -shipChance -score/150) {
     thisType = "ship";
   } else {
     thisType = "asteroid";
@@ -111,19 +120,19 @@ public void newEnemy() {
 
   if(border == 0) {
     //left border
-    enemies[eNum] = new Enemy(0-180, random(height), random(PI + limiter, TWO_PI - limiter), startVel, thisType);
+    enemies[eNum] = new Enemy(0-((10 + score*scESize)*circleFactor + circleAdd), random(height), random(PI + limiter, TWO_PI - limiter), startEVel, thisType);
   }
   if(border == 1) {
     //top border
-    enemies[eNum] = new Enemy(random(width), 0-180, random(HALF_PI + PI + limiter, 3*QUARTER_PI - limiter), startVel, thisType);
+    enemies[eNum] = new Enemy(random(width), 0-((10 + score*scESize)*circleFactor + circleAdd), random(HALF_PI + PI + limiter, 3*QUARTER_PI - limiter), startEVel, thisType);
   }
   if(border == 2) {
     //right border
-    enemies[eNum] = new Enemy(width+180, random(height), random(TWO_PI + limiter, TWO_PI + PI - limiter), startVel, thisType);
+    enemies[eNum] = new Enemy(width+((10 + score*scESize)*circleFactor + circleAdd), random(height), random(TWO_PI + limiter, TWO_PI + PI - limiter), startEVel, thisType);
   }
   if(border == 3) {
     //bottom border
-    enemies[eNum] = new Enemy(random(height), height+180, random(3*QUARTER_PI + limiter, HALF_PI + PI - limiter), startVel, thisType);
+    enemies[eNum] = new Enemy(random(height), height+((10 + score*scESize)*circleFactor + circleAdd), random(3*QUARTER_PI + limiter, HALF_PI + PI - limiter), startEVel, thisType);
   }
 
   startVel += 0.1f;
@@ -141,10 +150,10 @@ public void showScore() {
   shape(logo, border, border+500, width-border, 750);
   //update score
   if (score > hiscore){
-    hiscore = score;
+    hiscore = PApplet.parseInt(score);
   }
   // draw menu, score & high score
-  text(score, width*1/4, height*3/4 -50);
+  text(PApplet.parseInt(score), width*1/4, height*3/4 -50);
   text(hiscore, width*3/4, height*3/4 -50);
   // wait for key input to start new game
 }
@@ -176,8 +185,8 @@ class Dodger {
   PVector pos;
   PVector move;
   float a;
-  float size = 25;
-  float vel = 6;
+  float size = 28;
+  float vel = startVel;
 
   Dodger (float _x, float _y, float _a) {
     pos = new PVector(_x, _y);
@@ -202,7 +211,7 @@ class Dodger {
 
   public void update() {
     //dodger moves
-    move = new PVector(0, vel + score*0.15f);
+    move = new PVector(0, vel + score*scVel); // velocity adjust
     if(!clockwise){
       a -= 0.001f * rotVel;
     } else {
@@ -233,17 +242,18 @@ class Enemy {
   String type;
   //ship, asteroid
   float a;
-  float size = 18;
+  float size;
   float vel;
   float [] rndmAst = new float[16]; //random zahlen array fuer asteroid vertex
   boolean circleTouched = false;
-  int circleFactor = 12;
 
   Enemy (float _x, float _y, float _a, float _vel, String _type) {
     pos = new PVector(_x, _y);
     a = _a;
     type = _type;
-    vel = _vel * random(0.8f, 1.2f);
+    size = 10 + score*scESize;
+    size *= random(0.7f, 1.3f); // RNG for enemy size
+    vel = _vel * random(0.2f, 1.2f) + score * scEVel;
     for (int i=0; i < rndmAst.length; i++){
       rndmAst[i] = random(4, size);
     }
@@ -251,6 +261,7 @@ class Enemy {
       //set angle to player
       PVector nPos = new PVector(-pos.x + dodger.pos.x, -pos.y + dodger.pos.y);
       a = nPos.heading() - HALF_PI;
+      vel *= 1.7f;
     }
   }
 
@@ -263,9 +274,11 @@ class Enemy {
     rotate(a);
     // rect(0, 0, sin(a)*30, 50);
     if(!circleTouched) {
-      fill(255, 255, 255, 50);
+      fill(255, 255, 255, 25);
       noStroke();
-      ellipse(0, 0, 2*size*circleFactor, 2*size*circleFactor);
+
+
+      ellipse(0, 0, 2*size*circleFactor + circleAdd, 2*size*circleFactor + circleAdd);
     }
     stroke(255);
     strokeWeight(6);
@@ -279,11 +292,11 @@ class Enemy {
           fill(255);
           beginShape();
             vertex(0, -rndmAst[1]);//oben
-            vertex(rndmAst[0], -12);
+            // vertex(rndmAst[0], -12);
             vertex(rndmAst[2], 0);//rechts
-            vertex(12, rndmAst[4]);
+            // vertex(12, rndmAst[4]);
             vertex(0, rndmAst[3]);//unte
-            vertex(-12, 12);
+            // vertex(-12, 12);
             vertex(-rndmAst[4], 0);//links
             vertex(-12, -12);
             vertex(0, -rndmAst[1]);//oben
@@ -303,7 +316,8 @@ class Enemy {
   }
 
   public boolean bounds() {
-    if(pos.x < 0-size*circleFactor || pos.x > width+size*circleFactor || pos.y < 0-size*circleFactor || pos.y > height+size*circleFactor) {
+    if(pos.x < 0-0.1f*size*(circleFactor+circleAdd) || pos.x > width+0.1f*size*(circleFactor+circleAdd)
+    || pos.y < 0-0.1f*size*(circleFactor+circleAdd) || pos.y > height+0.1f*size*(circleFactor+circleAdd) ) {
       return true;
     } else {
       return false;
@@ -311,7 +325,7 @@ class Enemy {
   }
 
   public boolean collision() {
-    if(pos.dist(dodger.pos) <= (size+dodger.size) ) {
+    if(pos.dist(dodger.pos) <= (0.9f*(size+dodger.size)) ) {
       return true;
     } else {
       return false;
@@ -319,7 +333,7 @@ class Enemy {
   }
 
   public boolean circleCollision() {
-    if(pos.dist(dodger.pos) <= (circleFactor*size+dodger.size) ) {
+    if(pos.dist(dodger.pos) <= (size*circleFactor + circleAdd/2 + dodger.size) ) {
       return true;
     } else {
       return false;
@@ -327,7 +341,7 @@ class Enemy {
   }
 
 }
-  public void settings() {  size(1900, 1200); }
+  public void settings() {  fullScreen();  smooth(1000); }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "dodger" };
     if (passedArgs != null) {
