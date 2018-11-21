@@ -98,11 +98,11 @@ public void newEnemy() {
 
   if(border == 0) {
     //left border
-    enemies[eNum] = new Enemy(0-180, random(height), random(PI + limiter, TWO_PI - limiter), startVel, "asteroid");
+    enemies[eNum] = new Enemy(0-180, random(height), random(PI + limiter, TWO_PI - limiter), startVel, "ship");
   }
   if(border == 1) {
     //top border
-    enemies[eNum] = new Enemy(random(width), 0-180, random(HALF_PI + PI + limiter, 3*QUARTER_PI - limiter), startVel, "asteroid");
+    enemies[eNum] = new Enemy(random(width), 0-180, random(HALF_PI + PI + limiter, 3*QUARTER_PI - limiter), startVel, "ship");
   }
   if(border == 2) {
     //right border
@@ -216,6 +216,7 @@ class Enemy {
   //the dodger has x and y coordinates and an angle
   PVector pos;
   PVector move;
+  PVector nPos;
   String type;
   //ship, asteroid
   float a;
@@ -232,6 +233,11 @@ class Enemy {
     vel = _vel * random(0.8f, 1.2f);
     for (int i=0; i < rndmAst.length; i++){
       rndmAst[i] = random(4, size);
+    }
+    if(type == "ship"){
+      //set angle to player
+      PVector nPos = new PVector(-pos.x + dodger.pos.x, -pos.y + dodger.pos.y);
+      a = nPos.heading() - HALF_PI;
     }
   }
 

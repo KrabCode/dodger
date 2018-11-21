@@ -2,6 +2,7 @@ class Enemy {
   //the dodger has x and y coordinates and an angle
   PVector pos;
   PVector move;
+  PVector nPos;
   String type;
   //ship, asteroid
   float a;
@@ -18,6 +19,11 @@ class Enemy {
     vel = _vel * random(0.8, 1.2);
     for (int i=0; i < rndmAst.length; i++){
       rndmAst[i] = random(4, size);
+    }
+    if(type == "ship"){
+      //set angle to player
+      PVector nPos = new PVector(-pos.x + dodger.pos.x, -pos.y + dodger.pos.y);
+      a = nPos.heading() - HALF_PI;
     }
   }
 
