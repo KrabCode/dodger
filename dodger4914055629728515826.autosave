@@ -44,9 +44,9 @@ void setup() {
   background(0);
 
   //sounds
-  wetKick = new SoundFile(this, "wetkick.wav");
-  dryKick1 = new SoundFile(this, "drykick1.wav");
-  dryKick2 = new SoundFile(this, "drykick2.wav");
+  wetKick = minim.loadFile( "wetkick.wav");
+  dryKick1 = minim.loadFile( "drykick1.wav");
+  dryKick2 = minim.loadFile( "drykick2.wav");
 
   //logo = loadShape("logo.svg");
   shapeMode(CORNERS);

@@ -22,7 +22,7 @@ class Enemy {
     if(type == "asteroid"){
       for (int i=0; i < rndmAst.length; i++){
         rndmAst[i] = random(4, size);
-        hp = 50;
+        hp = int(50 / changeVel);
         //+ int(score/8);
       }
     }
@@ -31,7 +31,7 @@ class Enemy {
       PVector nPos = new PVector(-pos.x + dodger.pos.x, -pos.y + dodger.pos.y);
       a = nPos.heading() - HALF_PI;
       vel *= 2;
-      hp = 25 + int(score/15);
+      hp = int((25 + score/15) /changeVel);
     }
   }
 

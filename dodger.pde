@@ -1,37 +1,39 @@
-import processing.sound.*;
+import ddf.minim.*;
+Minim minim;
 
-SoundFile pop, sLeft, sRight;
-SoundFile snap0, snap1, snap2;
-SoundFile bg, gameover;
+// Load the sound files
+AudioSample pop, sLeft, sRight, snap0, snap1, snap2, gameover;
+AudioPlayer bg;
 boolean gameOverSoundPlayed;
 
 //PShape logo;
 
 float score;
 int hiscore = 0;
-int changeVel = 2;
+boolean gameOver;
+
+float changeVel = 2;                  // modifies all velocities
 
 // Dodger
 Dodger dodger;
-int startVel = 5 * changeVel;                     // beginning velocity of dodger, increases by scVel for every score
-float scVel = 0.03 * changeVel;
+float startVel;                       // beginning velocity of dodger, increases by scVel for every score
+float scVel;
 float rotVel;                         // rotation velocity of dodger
-float rotAcc = 2 * changeVel;                     // rotation acceleration of dodger, increases by scAcc for every score
-float scAcc = 0.03 * changeVel;
+float rotAcc;                         // rotation acceleration of dodger, increases by scAcc for every score
+float scAcc;
+float rotDamp = 0.995;                // rotation velocity dampening
 boolean clockwise;                    // is the player turning clockwise
-boolean gameOver;
-
 
 // Enemy
-int maxE = 40;
+int maxE = 20;
 Enemy[] enemies = new Enemy[maxE];
 int eNum;                             // index of current enemy
 int sActive = 9;                      // enemies active at start
 int eActive;                          // enemies currently active
 float limiter;                        // makes the arrow more narrow
-float startEVel = 3 * changeVel;      // beginning velocity of enemies, increases by scEVel for every score
-float scEVel = 0.015 * changeVel;
-float startSize = 50;                 // beginning size of enemies, increases by scESize for every score
+float startEVel;                      // beginning velocity of enemies, increases by scEVel for every score
+float scEVel;
+float startSize = 30;                 // beginning size of enemies, increases by scESize for every score
 float scESize = 0.15;
 float shipChance;                     // chance to spawn ship instead of asteroid
 
@@ -41,40 +43,55 @@ int circleAdd = 220;                  // added to size of aura
 int circleTransparency = 20;
 
 void setup() {
+  // setup screen
   // size(1000, 1000);
   fullScreen();
   orientation(PORTRAIT);
   frameRate(30);
-  // fullScreen(P2D, SPAN);
   smooth(5);
   background(0);
 
+  // Create a Sound object for controlling the synthesis engine sample rate.
+
   //sounds
-  pop = new SoundFile(this, "pop.wav");
-  sLeft = new SoundFile(this, "perc1.wav");
-  sLeft.pan(-1);
-  sRight = new SoundFile(this, "perc2.wav");
-  sRight.pan(1);
-  snap0 = new SoundFile(this, "snap0.wav");
-  snap1 = new SoundFile(this, "snap1.wav");
-  snap2 = new SoundFile(this, "snap2.wav");
-  bg = new SoundFile(this, "bg.wav");
-  //bg.rate(0.6);
-  gameover = new SoundFile(this, "gameover.wav");
-  gameover.amp(0.6);
+  minim = new Minim(this);
+  int bufferSize = 512;
+  pop = minim.loadSample("pop.wav", bufferSize);
+  sLeft = minim.loadSample("perc1.wav", bufferSize);
+  sRight = minim.loadSample("perc2.wav", bufferSize);
+  snap0 = minim.loadSample("snap0.wav", bufferSize);
+  snap1 = minim.loadSample("snap1.wav", bufferSize);
+  snap2 = minim.loadSample("snap2.wav", bufferSize);
+  bg = minim.loadFile("bg.wav", bufferSize);
+  gameover = minim.loadSample("gameover.wav", bufferSize);
 
   //logo = loadShape("logo.svg");
-  shapeMode(CORNERS);
+  //shapeMode(CORNERS);
+
+  initGame(); // set up the variables for game initialisation
+}
+
+// set up the variables for game initialisation
+void initGame() {
   gameOver = false;
   score = 0;
+
   // dodger attributes
-  dodger = new Dodger(width/2, height/2, 0);
   rotVel = 20;
+  startVel = 3.1 * changeVel;
+  scVel = 0.015 * changeVel;
+  rotAcc = 1.8 * changeVel;
+  scAcc = 0.01 * changeVel;
+  dodger = new Dodger(width/2, height/2, 0);
 
   //enemy attributes
+  startEVel = 3 * changeVel;
+  scEVel = 0.01 * changeVel;
   limiter = 0.7;
   eActive = sActive;
-  shipChance = 0.15; //starting chance for spawn to be ship, increases with score as well
+  shipChance = 0.1; //starting chance for spawn to be ship, increases with score as well
+
+  // generate new enemies
   for(eNum = 0; eNum < enemies.length; eNum++) {
     newEnemy();
   }
@@ -88,17 +105,21 @@ void draw() {
   }
 }
 
+// perform a frame of the gameplay
 void runGame() {
-  if(!bg.isPlaying()) {
-     bg.play();
+  if(bg.position() == bg.length()) {
+    bg.rewind();
   }
-  rotAcc = 1.5 + score*scAcc; //increase the rotation velocity by rotation acceleration
+  if(!bg.isPlaying()) {
+    gameover.stop();
+    bg.play();
+  }
   background(0, 0, 0);
   textSize(30);
   fill(255);
   //adjust amount of enemies according to score
   if(int(score/25 + sActive) > eActive && eActive < maxE) {
-    eActive++;
+    //eActive++;
   }
   for(eNum = 0; eNum < eActive; eNum++){
     enemies[eNum].update();
@@ -119,15 +140,15 @@ void runGame() {
         }
         switch(frameCount % 3) {
           case 0:
-            snap1.play();
+            snap1.trigger();
             println("snap 1");
             break;
           case 1:
-            snap1.play();
+            snap1.trigger();
             println("snap 2");
             break;
           case 2:
-            snap2.play();
+            snap2.trigger();
             println("snap 3");
             break;
         }
@@ -140,10 +161,13 @@ void runGame() {
   for(eNum = 0; eNum < eActive; eNum++){
     enemies[eNum].draw();
   }
+
   dodger.update();
   dodger.bounds();
   dodger.draw();
+  rotAcc = (2 + score*scAcc) * changeVel; //increase the rotation velocity by rotation acceleration
   rotVel += rotAcc;
+  rotVel *= rotDamp;
 }
 
 void newEnemy() {
@@ -180,8 +204,8 @@ void newEnemy() {
 
 void showScore() {
   if(!gameOverSoundPlayed){
-    bg.stop();
-    gameover.play();
+    bg.pause();
+    gameover.trigger();
     gameOverSoundPlayed = true;
     println("gameOverSoundPlayed");
   }
@@ -207,12 +231,12 @@ void showScore() {
 void keyPressed() { // listen for user input
   if(gameOver && keyCode == ' '){
     gameOver = !gameOver;
-    setup();
+    initGame();
   } else {
     if(!clockwise){
       rotVel = 20;
       sRight.stop();
-      sRight.play();
+      sRight.trigger();
     }
     clockwise = true;
     }
@@ -221,12 +245,12 @@ void keyPressed() { // listen for user input
 void touchStarted() {
   if(gameOver){
     gameOver = !gameOver;
-    setup();
+    initGame();
   } else {
     if(!clockwise){
       rotVel = 20;
       sRight.stop();
-      sRight.play();
+      sRight.trigger();
     }
     clockwise = true;
     }
@@ -235,7 +259,8 @@ void touchStarted() {
 void keyReleased() { // listen for user input
   if(clockwise){
     sLeft.stop();
-    sLeft.play();
+    sRight.stop();
+    sLeft.trigger();
   }
   clockwise = false;
   rotVel = 20;
@@ -244,7 +269,8 @@ void keyReleased() { // listen for user input
 void touchEnded() {
   if(clockwise){
     sLeft.stop();
-    sLeft.play();
+    sRight.stop();
+    sLeft.trigger();
   }
   clockwise = false;
   rotVel = 20;

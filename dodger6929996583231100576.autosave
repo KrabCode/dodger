@@ -1,0 +1,281 @@
+import ddf.minim.*;
+Minim minim;
+
+// Load the sound files
+AudioSample pop, sLeft, sRight, snap0, snap1, snap2, gameover;
+AudioPlayer bg;
+boolean gameOverSoundPlayed;
+
+//PShape logo;
+
+float score;
+int hiscore = 0;
+boolean gameOver;
+
+float changeVel = 2;                  // modifies all velocities
+
+// Dodger
+Dodger dodger;
+float startVel;                       // beginning velocity of dodger, increases by scVel for every score
+float scVel;
+float rotVel;                         // rotation velocity of dodger
+float rotAcc;                         // rotation acceleration of dodger, increases by scAcc for every score
+float scAcc;
+float rotDamp = 0.995;                  // acceleration dampening
+boolean clockwise;                    // is the player turning clockwise
+
+// Enemy
+int maxE = 20;
+Enemy[] enemies = new Enemy[maxE];
+int eNum;                             // index of current enemy
+int sActive = 9;                      // enemies active at start
+int eActive;                          // enemies currently active
+float limiter;                        // makes the arrow more narrow
+float startEVel;                      // beginning velocity of enemies, increases by scEVel for every score
+float scEVel;
+float startSize = 30;                 // beginning size of enemies, increases by scESize for every score
+float scESize = 0.15;
+float shipChance;                     // chance to spawn ship instead of asteroid
+
+// Aura
+int circleFactor = 2;                 // size of aura per enemy size
+int circleAdd = 220;                  // added to size of aura
+int circleTransparency = 20;
+
+void setup() {
+  // setup screen
+  // size(1000, 1000);
+  fullScreen();
+  orientation(PORTRAIT);
+  frameRate(30);
+  // fullScreen(P2D, SPAN);
+  smooth(5);
+  background(0);
+
+
+  //sounds
+  pop = minim.loadFile( "pop.wav");
+  sLeft = minim.loadFile( "perc1.wav");
+  sLeft.pan(-1);
+  sRight = minim.loadFile( "perc2.wav");
+  sRight.pan(1);
+  snap0 = minim.loadFile( "snap0.wav");
+  snap1 = minim.loadFile( "snap1.wav");
+  snap2 = minim.loadFile( "snap2.wav");
+  bg = minim.loadFile( "bg.wav");
+  bg.rate(0.5);
+  gameover = minim.loadFile( "gameover.wav");
+  gameover.amp(0.4);
+
+  //logo = loadShape("logo.svg");
+  shapeMode(CORNERS);
+
+  initGame(); // set up the variables for game initialisation
+
+}
+
+// set up the variables for game initialisation
+void initGame() {
+  gameOver = false;
+  score = 0;
+
+  // dodger attributes
+  dodger = new Dodger(width/2, height/2, 0);
+  rotVel = 20;
+  startVel = 2 * changeVel;
+  scVel = 0.015 * changeVel;
+  rotAcc = 1.8 * changeVel;
+  scAcc = 0.01 * changeVel;
+
+  //enemy attributes
+  startEVel = 1.9 * changeVel;
+  scEVel = 0.01 * changeVel;
+  limiter = 0.7;
+  eActive = sActive;
+  shipChance = 0.1; //starting chance for spawn to be ship, increases with score as well
+
+  // generate new enemies
+  for(eNum = 0; eNum < enemies.length; eNum++) {
+    newEnemy();
+  }
+}
+
+void draw() {
+  if(!gameOver){
+    runGame();
+  } else {
+    showScore();
+  }
+}
+
+// perform a frame of the gameplay
+void runGame() {
+  if(!bg.isPlaying()) {
+    gameover.stop();
+    bg.play();
+  }
+  if(!bg.isPlaying()) {
+    gameover.stop();
+    bg.play();
+  }
+  background(0, 0, 0);
+  textSize(30);
+  fill(255);
+  //adjust amount of enemies according to score
+  if(int(score/25 + sActive) > eActive && eActive < maxE) {
+    //eActive++;
+  }
+  for(eNum = 0; eNum < eActive; eNum++){
+    enemies[eNum].update();
+    if (enemies[eNum].bounds()) {
+      newEnemy();
+    }
+    if(enemies[eNum].collision()){
+      gameOverSoundPlayed = false;
+      gameOver = true;
+    }
+    if(enemies[eNum].circleCollision()){
+      enemies[eNum].hp--;
+      if(enemies[eNum].circleTouched == false && enemies[eNum].hp < 0) {
+        if(enemies[eNum].type == "ship") {
+          score += 1.5;
+        } else {
+          score++;
+        }
+        switch(frameCount % 3) {
+          case 0:
+            snap1.play();
+            println("snap 1");
+            break;
+          case 1:
+            snap1.play();
+            println("snap 2");
+            break;
+          case 2:
+            snap2.play();
+            println("snap 3");
+            break;
+        }
+        enemies[eNum].circleTouched = true;
+        enemies[eNum].vel *= 0.8; //reduce enemy velocity when circle disappears
+      }
+    }
+    enemies[eNum].drawCircle();
+  }
+  for(eNum = 0; eNum < eActive; eNum++){
+    enemies[eNum].draw();
+  }
+
+  dodger.update();
+  dodger.bounds();
+  dodger.draw();
+  rotAcc = (2 + score*scAcc) * changeVel; //increase the rotation velocity by rotation acceleration
+  rotVel += rotAcc;
+  rotVel *= rotDamp;
+}
+
+void newEnemy() {
+  int border;
+  border = (int) random(4);
+  float type;
+  type = random(1);
+  String thisType;
+  if(type > 1 -shipChance -score/350) {
+    thisType = "ship";
+  } else {
+    thisType = "asteroid";
+  }
+
+  if(border == 0) {
+    //left border
+    enemies[eNum] = new Enemy(0-((10 + score*scESize)*circleFactor + circleAdd), random(height), random(PI + limiter, TWO_PI - limiter), startEVel, thisType);
+  }
+  if(border == 1) {
+    //top border
+    enemies[eNum] = new Enemy(random(width), 0-((10 + score*scESize)*circleFactor + circleAdd), random(HALF_PI + PI + limiter, 3*QUARTER_PI - limiter), startEVel, thisType);
+  }
+  if(border == 2) {
+    //right border
+    enemies[eNum] = new Enemy(width+((10 + score*scESize)*circleFactor + circleAdd), random(height), random(TWO_PI + limiter, TWO_PI + PI - limiter), startEVel, thisType);
+  }
+  if(border == 3) {
+    //bottom border
+    enemies[eNum] = new Enemy(random(height), height+((10 + score*scESize)*circleFactor + circleAdd), random(3*QUARTER_PI + limiter, HALF_PI + PI - limiter), startEVel, thisType);
+  }
+
+  startVel += 0.1;
+}
+
+void showScore() {
+  if(!gameOverSoundPlayed){
+    bg.stop();
+    gameover.play();
+    gameOverSoundPlayed = true;
+    println("gameOverSoundPlayed");
+  }
+  background(0);
+  textSize(150);
+  fill(255);
+  stroke(255);
+  strokeWeight(6);
+  textAlign(CENTER, CENTER);
+  // draw logo
+  //int border = 15;
+  //shape(logo, border, border+500, width-border, 750);
+  //update score
+  if (score > hiscore){
+    hiscore = int(score);
+  }
+  // draw menu, score & high score
+  text(hiscore, width*2/4, height*1/4 -50);
+  text(int(score), width*2/4, height*3.3/4 -50);
+  // wait for key input to start new game
+}
+
+void keyPressed() { // listen for user input
+  if(gameOver && keyCode == ' '){
+    gameOver = !gameOver;
+    initGame();
+  } else {
+    if(!clockwise){
+      rotVel = 20;
+      sRight.stop();
+      sRight.play();
+    }
+    clockwise = true;
+    }
+  }
+
+void touchStarted() {
+  if(gameOver){
+    gameOver = !gameOver;
+    initGame();
+  } else {
+    if(!clockwise){
+      rotVel = 20;
+      sRight.stop();
+      sRight.play();
+    }
+    clockwise = true;
+    }
+}
+
+void keyReleased() { // listen for user input
+  if(clockwise){
+    sLeft.stop();
+    sRight.stop();
+    sLeft.play();
+  }
+  clockwise = false;
+  rotVel = 20;
+}
+
+void touchEnded() {
+  if(clockwise){
+    sLeft.stop();
+    sRight.stop();
+    sLeft.play();
+  }
+  clockwise = false;
+  rotVel = 20;
+}

@@ -44,9 +44,9 @@ void setup() {
   background(0);
 
   //sounds
-  popBubble = new SoundFile(this, "pop.wav");
-  dryKick1 = new SoundFile(this, "drykick1.wav");
-  dryKick2 = new SoundFile(this, "drykick2.wav");
+  popBubble = minim.loadFile( "pop.wav");
+  dryKick1 = minim.loadFile( "drykick1.wav");
+  dryKick2 = minim.loadFile( "drykick2.wav");
 
   //logo = loadShape("logo.svg");
   shapeMode(CORNERS);
