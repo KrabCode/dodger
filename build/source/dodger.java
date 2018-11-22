@@ -96,14 +96,14 @@ public void initGame() {
 
   // dodger attributes
   rotVel = 20;
-  startVel = 2 * changeVel;
+  startVel = 3.1f * changeVel;
   scVel = 0.015f * changeVel;
   rotAcc = 1.8f * changeVel;
   scAcc = 0.01f * changeVel;
   dodger = new Dodger(width/2, height/2, 0);
 
   //enemy attributes
-  startEVel = 1.9f * changeVel;
+  startEVel = 3 * changeVel;
   scEVel = 0.01f * changeVel;
   limiter = 0.7f;
   eActive = sActive;
