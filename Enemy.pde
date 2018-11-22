@@ -16,21 +16,22 @@ class Enemy {
     pos = new PVector(_x, _y);
     a = _a;
     type = _type;
-    size = 50 + score*scESize;
+    size = startSize + score*scESize;
     size *= random(0.6, 1.4); // RNG for enemy size
-    vel = _vel * random(0.8, 1.2) + score * scEVel;
+    vel = _vel * random(0.7, 1.3) + score * scEVel;
     if(type == "asteroid"){
       for (int i=0; i < rndmAst.length; i++){
         rndmAst[i] = random(4, size);
-        hp = 40 + int(score/2);
+        hp = 50;
+        //+ int(score/8);
       }
     }
     if(type == "ship"){
       //set angle to player
       PVector nPos = new PVector(-pos.x + dodger.pos.x, -pos.y + dodger.pos.y);
       a = nPos.heading() - HALF_PI;
-      vel *= 2.4;
-      hp = 20 + int(score/3);
+      vel *= 2;
+      hp = 25 + int(score/15);
     }
   }
 
@@ -39,7 +40,7 @@ class Enemy {
     translate(pos.x, pos.y);
     if(!circleTouched) {
       noStroke();
-      fill(255, 255, 255, 5 + hp);
+      fill(255, 255, 255, circleTransparency + hp);
       ellipse(0, 0, 2*size*circleFactor + circleAdd, 2*size*circleFactor + circleAdd);
       noStroke();
       // //comment to remove lag
@@ -65,10 +66,6 @@ class Enemy {
     }
     strokeWeight(3);
     if(type == "ship") {
-      // line(-0.5 * size, -1 * size, 0, 1 * size);
-      // line(0, 1 * size, 0.5 * size, -1 * size);
-      // line(0.5 * size, -1 * size, 0, 0);
-      // line(0, 0, -0.5 * size, -1 * size);
       beginShape();
         vertex(-0.5 * size,   -1 * size);
         vertex(0          ,    1 * size);
