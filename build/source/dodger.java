@@ -3,8 +3,6 @@ import processing.data.*;
 import processing.event.*; 
 import processing.opengl.*; 
 
-import ddf.minim.*; 
-
 import javazoom.jl.converter.*; 
 import javazoom.jl.decoder.*; 
 import javazoom.jl.player.*; 
@@ -36,14 +34,6 @@ import java.io.OutputStream;
 import java.io.IOException; 
 
 public class dodger extends PApplet {
-
-
-Minim minim;
-
-// Load the sound files
-AudioSample pop, sLeft, sRight, snap0, snap1, snap2, gameover;
-AudioPlayer bg;
-boolean gameOverSoundPlayed;
 
 //PShape logo;
 
@@ -94,20 +84,6 @@ public void setup() {
   
   background(0);
 
-  // Create a Sound object for controlling the synthesis engine sample rate.
-
-  //sounds
-  minim = new Minim(this);
-  int bufferSize = 512;
-  pop = minim.loadSample("pop.wav", bufferSize);
-  sLeft = minim.loadSample("perc1.wav", bufferSize);
-  sRight = minim.loadSample("perc2.wav", bufferSize);
-  snap0 = minim.loadSample("snap0.wav", bufferSize);
-  snap1 = minim.loadSample("snap1.wav", bufferSize);
-  snap2 = minim.loadSample("snap2.wav", bufferSize);
-  bg = minim.loadFile("bg.wav", bufferSize);
-  gameover = minim.loadSample("gameover.wav", bufferSize);
-
   //logo = loadShape("logo.svg");
   //shapeMode(CORNERS);
 
@@ -117,7 +93,7 @@ public void setup() {
 // set up the variables for game initialisation
 public void initGame() {
   gameOver = false;
-  score = 60;
+  score = 0;
 
   // dodger attributes
   rotVel = 20;
@@ -142,6 +118,8 @@ public void initGame() {
   }
 }
 
+/////UP = SETUP//////////DOWN = UPDATE///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 public void draw() {
   if(!gameOver){
     runGame();
@@ -152,13 +130,6 @@ public void draw() {
 
 // perform a frame of the gameplay
 public void runGame() {
-  if(bg.position() == bg.length()) {
-    bg.rewind();
-  }
-  if(!bg.isPlaying()) {
-    gameover.stop();
-    bg.play();
-  }
   background(0, 0, 0);
   textSize(30);
   fill(255);
@@ -172,7 +143,6 @@ public void runGame() {
       newEnemy();
     }
     if(enemies[eNum].collision()){
-      gameOverSoundPlayed = false;
       gameOver = true;
     }
     if(enemies[eNum].circleCollision()){
@@ -185,18 +155,6 @@ public void runGame() {
           score += 1.5f;
         } else {
           score++;
-        }
-
-        switch(frameCount % 3) {
-          case 0:
-            snap1.trigger();
-            break;
-          case 1:
-            snap1.trigger();
-            break;
-          case 2:
-            snap2.trigger();
-            break;
         }
         enemies[eNum].circleTouched = true;
         enemies[eNum].vel *= 0.8f; //reduce enemy velocity when circle disappears
@@ -255,11 +213,6 @@ public void newEnemy() {
 }
 
 public void showScore() {
-  if(!gameOverSoundPlayed){
-    bg.pause();
-    gameover.trigger();
-    gameOverSoundPlayed = true;
-  }
   background(0);
   textSize(150);
   fill(255);
@@ -279,19 +232,8 @@ public void showScore() {
   // wait for key input to start new game
 }
 
-public void keyPressed() { // listen for user input
-  if(gameOver && keyCode == ' '){
-    gameOver = !gameOver;
-    initGame();
-  } else {
-    if(!clockwise){
-      rotVel = 20;
-      sRight.stop();
-      sRight.trigger();
-    }
-    clockwise = true;
-    }
-  }
+
+///////////////INPUTS///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public void touchStarted() {
   if(gameOver){
@@ -300,31 +242,16 @@ public void touchStarted() {
   } else {
     if(!clockwise){
       rotVel = 20;
-      sRight.stop();
-      sRight.trigger();
     }
     clockwise = true;
     }
 }
 
-public void keyReleased() { // listen for user input
-  if(clockwise){
-    sLeft.stop();
-    sRight.stop();
-    sLeft.trigger();
-  }
-  clockwise = false;
-  rotVel = 20;
-}
-
 public void touchEnded() {
   if(clockwise){
-    sLeft.stop();
-    sRight.stop();
-    sLeft.trigger();
+    rotVel = 20;
   }
   clockwise = false;
-  rotVel = 20;
 }
 class Dodger {
 
@@ -413,14 +340,14 @@ class Enemy {
       //set angle to player
       PVector nPos = new PVector(-pos.x + dodger.pos.x, -pos.y + dodger.pos.y);
       a = nPos.heading() - HALF_PI;
-      vel *= 2;
+      vel *= 1.5f;
       hp = PApplet.parseInt((30 + score/15) /changeVel);
     }
     if(type == "kamikaze"){
       //set angle to player
       PVector nPos = new PVector(-pos.x + dodger.pos.x, -pos.y + dodger.pos.y);
       a = nPos.heading() - HALF_PI;
-      hp = PApplet.parseInt((25 + score/25) /changeVel);
+      hp = PApplet.parseInt((25 + score/8) /changeVel);
     }
     if(type == "boss1"){
       size += modifier;
@@ -509,7 +436,7 @@ class Enemy {
       PVector nPos = new PVector(-pos.x + dodger.pos.x, -pos.y + dodger.pos.y);
       PVector pointToPlayer = PVector.fromAngle(nPos.heading() - HALF_PI);
       PVector direction = PVector.fromAngle(a);
-      direction.lerp(pointToPlayer, 0.06f);
+      direction.lerp(pointToPlayer, 0.05f);
       a = direction.heading();
     }
     move = new PVector(0, vel);
