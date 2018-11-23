@@ -3,18 +3,30 @@
 
 * make proper graphics for kamikaze and boss1
 
+**MENU**
+
+* make a menu that is more than a splashscreen
+* toggle music and fx on/off
+* show highscore
+
+**TUTORIAL**
+
+* make a tutorial
+* begin with just auras, gradually introduce enemies (not all types needed)
+* death just respawns
+
 **GAME LOGIC**
 
 * persistent highscores with loadTable or loadStrings
 
-  * slow enemies down while harvesting their aura instead of after aura was harvested for that sucking-their-energy kinda feel
-  * make it possible that aura can shrink when harvested
+* slow enemies down while harvesting their aura instead of after aura was harvested for that sucking-their-energy kinda feel
+* make it possible that aura can shrink when harvested
 
 **DIAGNOSTICS**
 
 * make a line on top of screen that displays current velocities
 
-  * make the diagnostics togglable with a key
+* make the diagnostics togglable with a key
 
 **BALANCE**
 
@@ -32,3 +44,10 @@
   * find a longer sound to paulstretch a nicer background soundscape
   * improve the steering wobble sound
   * have higher variety of aura 'pop' sounds
+
+**RANDOM IDEAS**
+
+* two player modes: 
+  * **survival**: no PVP collisions, last dodger standing
+  * **score**: first player to score X points wins (collision reduces score by 50%)
+  * **slowdown**: score reduces velocity, collision reduces score, on PVP collision the player with higher score wins
