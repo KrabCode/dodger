@@ -5,27 +5,6 @@ import processing.opengl.*;
 
 import ddf.minim.*; 
 
-import javazoom.jl.converter.*; 
-import javazoom.jl.decoder.*; 
-import javazoom.jl.player.*; 
-import javazoom.jl.player.advanced.*; 
-import javazoom.spi.*; 
-import javazoom.spi.mpeg.sampled.convert.*; 
-import javazoom.spi.mpeg.sampled.file.*; 
-import javazoom.spi.mpeg.sampled.file.tag.*; 
-import javax.sound.midi.*; 
-import javax.sound.midi.spi.*; 
-import javax.sound.sampled.*; 
-import javax.sound.sampled.spi.*; 
-import org.tritonus.core.*; 
-import org.tritonus.sampled.file.*; 
-import org.tritonus.share.*; 
-import org.tritonus.share.midi.*; 
-import org.tritonus.share.sampled.*; 
-import org.tritonus.share.sampled.convert.*; 
-import org.tritonus.share.sampled.file.*; 
-import org.tritonus.share.sampled.mixer.*; 
-
 import java.util.HashMap; 
 import java.util.ArrayList; 
 import java.io.File; 
@@ -385,10 +364,10 @@ class Enemy {
     pos = new PVector(_x, _y);
     a = _a;
     type = _type;
-    size = startSize + score*scESize;
-    size *= random(0.6f, 1.4f); // RNG for enemy size
-    vel = _vel * random(0.7f, 1.3f) + score * scEVel;
     if(type == "asteroid"){
+      size = startSize + score*scESize;
+      size *= random(0.7f, 1.4f); // RNG for enemy size
+      vel = _vel * random(0.7f, 1.3f) + score * scEVel;
       for (int i=0; i < rndmAst.length; i++){
         rndmAst[i] = random(4, size);
         hp = PApplet.parseInt(50 / changeVel);
@@ -396,6 +375,9 @@ class Enemy {
       }
     }
     if(type == "ship"){
+      size = startSize + score*scESize;
+      size *= random(0.6f, 1.2f); // RNG for enemy size
+      vel = _vel * random(0.8f, 1.2f) + score * scEVel;
       //set angle to player
       PVector nPos = new PVector(-pos.x + dodger.pos.x, -pos.y + dodger.pos.y);
       a = nPos.heading() - HALF_PI;
@@ -403,14 +385,18 @@ class Enemy {
       hp = PApplet.parseInt((30 + score/15) /changeVel);
     }
     if(type == "kamikaze"){
+      size = startSize + score*scESize;
+      size *= random(0.6f, 1.2f); // RNG for enemy size
+      vel = _vel * random(0.8f, 1.2f) + score * scEVel;
       //set angle to player
       PVector nPos = new PVector(-pos.x + dodger.pos.x, -pos.y + dodger.pos.y);
       a = nPos.heading() - HALF_PI;
       hp = PApplet.parseInt((25 + score/8) /changeVel);
     }
     if(type == "boss1"){
-      size *= 2;
-      size += modifier;
+      size = (startSize + score*scESize) *2 + modifier;
+      size *= random(0.9f, 1.1f); // RNG for enemy size
+      vel = _vel * random(0.9f, 1.1f) + score * scEVel;
       for (int i=0; i < rndmAst.length; i++){
         rndmAst[i] = random(4, size);
         hp = PApplet.parseInt(400+modifier / changeVel);
@@ -548,7 +534,6 @@ class Enemy {
       return false;
     }
   }
-
 }
   public void settings() {  fullScreen(P2D);  smooth(5); }
   static public void main(String[] passedArgs) {

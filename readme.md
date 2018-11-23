@@ -1,4 +1,4 @@
-##TODO
+## TODO
 **GRAPHICS**
 
 * make proper graphics for kamikaze and boss1

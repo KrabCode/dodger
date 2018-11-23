@@ -18,10 +18,10 @@ class Enemy {
     pos = new PVector(_x, _y);
     a = _a;
     type = _type;
-    size = startSize + score*scESize;
-    size *= random(0.6, 1.4); // RNG for enemy size
-    vel = _vel * random(0.7, 1.3) + score * scEVel;
     if(type == "asteroid"){
+      size = startSize + score*scESize;
+      size *= random(0.7, 1.4); // RNG for enemy size
+      vel = _vel * random(0.7, 1.3) + score * scEVel;
       for (int i=0; i < rndmAst.length; i++){
         rndmAst[i] = random(4, size);
         hp = int(50 / changeVel);
@@ -29,6 +29,9 @@ class Enemy {
       }
     }
     if(type == "ship"){
+      size = startSize + score*scESize;
+      size *= random(0.6, 1.2); // RNG for enemy size
+      vel = _vel * random(0.8, 1.2) + score * scEVel;
       //set angle to player
       PVector nPos = new PVector(-pos.x + dodger.pos.x, -pos.y + dodger.pos.y);
       a = nPos.heading() - HALF_PI;
@@ -36,14 +39,18 @@ class Enemy {
       hp = int((30 + score/15) /changeVel);
     }
     if(type == "kamikaze"){
+      size = startSize + score*scESize;
+      size *= random(0.6, 1.2); // RNG for enemy size
+      vel = _vel * random(0.8, 1.2) + score * scEVel;
       //set angle to player
       PVector nPos = new PVector(-pos.x + dodger.pos.x, -pos.y + dodger.pos.y);
       a = nPos.heading() - HALF_PI;
       hp = int((25 + score/8) /changeVel);
     }
     if(type == "boss1"){
-      size *= 2;
-      size += modifier;
+      size = (startSize + score*scESize) *2 + modifier;
+      size *= random(0.9, 1.1); // RNG for enemy size
+      vel = _vel * random(0.9, 1.1) + score * scEVel;
       for (int i=0; i < rndmAst.length; i++){
         rndmAst[i] = random(4, size);
         hp = int(400+modifier / changeVel);
@@ -181,5 +188,4 @@ class Enemy {
       return false;
     }
   }
-
 }
