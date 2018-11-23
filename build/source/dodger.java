@@ -5,6 +5,27 @@ import processing.opengl.*;
 
 import ddf.minim.*; 
 
+import javazoom.jl.converter.*; 
+import javazoom.jl.decoder.*; 
+import javazoom.jl.player.*; 
+import javazoom.jl.player.advanced.*; 
+import javazoom.spi.*; 
+import javazoom.spi.mpeg.sampled.convert.*; 
+import javazoom.spi.mpeg.sampled.file.*; 
+import javazoom.spi.mpeg.sampled.file.tag.*; 
+import javax.sound.midi.*; 
+import javax.sound.midi.spi.*; 
+import javax.sound.sampled.*; 
+import javax.sound.sampled.spi.*; 
+import org.tritonus.core.*; 
+import org.tritonus.sampled.file.*; 
+import org.tritonus.share.*; 
+import org.tritonus.share.midi.*; 
+import org.tritonus.share.sampled.*; 
+import org.tritonus.share.sampled.convert.*; 
+import org.tritonus.share.sampled.file.*; 
+import org.tritonus.share.sampled.mixer.*; 
+
 import java.util.HashMap; 
 import java.util.ArrayList; 
 import java.io.File; 
@@ -30,7 +51,7 @@ float score;
 int hiscore = 0;
 boolean gameOver;
 
-float changeVel = 2;                  // modifies all velocities
+float changeVel = 1;                  // modifies all velocities
 
 // Dodger
 Dodger dodger;
@@ -54,18 +75,23 @@ float scEVel;
 float startSize = 30;                 // beginning size of enemies, increases by scESize for every score
 float scESize = 0.15f;
 float shipChance;                     // chance to spawn ship instead of asteroid
+float kamiChance;                     // chance to spawn kamikaze, starts at 0 increases with score
+boolean bossActive;                   // tells us if there is a boss on the field
+float modifier;                       // used to modify some starting values
 
 // Aura
 int circleFactor = 2;                 // size of aura per enemy size
 int circleAdd = 220;                  // added to size of aura
 int circleTransparency = 20;
+float bossCFactor = 1.5f;                // boss has smaller circle and no add
 
 public void setup() {
   // setup screen
   // size(1000, 1000);
   
   orientation(PORTRAIT);
-  frameRate(30);
+  noCursor();
+  frameRate(60);
   
   background(0);
 
@@ -108,12 +134,16 @@ public void initGame() {
   limiter = 0.7f;
   eActive = sActive;
   shipChance = 0.1f; //starting chance for spawn to be ship, increases with score as well
+  kamiChance = 0;
+  bossActive = false;
 
   // generate new enemies
   for(eNum = 0; eNum < enemies.length; eNum++) {
     newEnemy();
   }
 }
+
+/////UP = SETUP//////////DOWN = UPDATE///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public void draw() {
   if(!gameOver){
@@ -151,23 +181,26 @@ public void runGame() {
     if(enemies[eNum].circleCollision()){
       enemies[eNum].hp--;
       if(enemies[eNum].circleTouched == false && enemies[eNum].hp < 0) {
-        if(enemies[eNum].type == "ship") {
+        if(enemies[eNum].type == "boss1") {
+          score += 5;
+          bossActive = false;
+        } else if(enemies[eNum].type == "kamikaze") {
+          score += 2.5f;
+        } else if(enemies[eNum].type == "ship") {
           score += 1.5f;
         } else {
           score++;
         }
+
         switch(frameCount % 3) {
           case 0:
             snap1.trigger();
-            println("snap 1");
             break;
           case 1:
             snap1.trigger();
-            println("snap 2");
             break;
           case 2:
             snap2.trigger();
-            println("snap 3");
             break;
         }
         enemies[eNum].circleTouched = true;
@@ -194,7 +227,13 @@ public void newEnemy() {
   float type;
   type = random(1);
   String thisType;
-  if(type > 1 -shipChance -score/350) {
+  if(score > 5 && score % 60 <= 5 && !bossActive) {
+    thisType = "boss1";
+    bossActive = true;
+    modifier = score;
+  } else if(type > 1 -kamiChance -score/450) {
+    thisType = "kamikaze";
+  } else if(type > 1 -shipChance -score/450) {
     thisType = "ship";
   } else {
     thisType = "asteroid";
@@ -216,7 +255,7 @@ public void newEnemy() {
     //bottom border
     enemies[eNum] = new Enemy(random(height), height+((10 + score*scESize)*circleFactor + circleAdd), random(3*QUARTER_PI + limiter, HALF_PI + PI - limiter), startEVel, thisType);
   }
-
+  modifier = 0;
   startVel += 0.1f;
 }
 
@@ -225,7 +264,6 @@ public void showScore() {
     bg.pause();
     gameover.trigger();
     gameOverSoundPlayed = true;
-    println("gameOverSoundPlayed");
   }
   background(0);
   textSize(150);
@@ -246,6 +284,8 @@ public void showScore() {
   // wait for key input to start new game
 }
 
+
+///////////////INPUTS///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 public void keyPressed() { // listen for user input
   if(gameOver && keyCode == ' '){
     gameOver = !gameOver;
@@ -354,7 +394,7 @@ class Enemy {
   PVector move;
   PVector nPos;
   String type;
-  //ship, asteroid
+  //ship, kamikaze, asteroid
   int hp; // health points of circle
   float a;
   float size;
@@ -380,8 +420,23 @@ class Enemy {
       //set angle to player
       PVector nPos = new PVector(-pos.x + dodger.pos.x, -pos.y + dodger.pos.y);
       a = nPos.heading() - HALF_PI;
-      vel *= 2;
-      hp = PApplet.parseInt((25 + score/15) /changeVel);
+      vel *= 1.5f;
+      hp = PApplet.parseInt((30 + score/15) /changeVel);
+    }
+    if(type == "kamikaze"){
+      //set angle to player
+      PVector nPos = new PVector(-pos.x + dodger.pos.x, -pos.y + dodger.pos.y);
+      a = nPos.heading() - HALF_PI;
+      hp = PApplet.parseInt((25 + score/8) /changeVel);
+    }
+    if(type == "boss1"){
+      size += modifier;
+      size *= 2;
+      for (int i=0; i < rndmAst.length; i++){
+        rndmAst[i] = random(4, size);
+        hp = PApplet.parseInt(400+modifier / changeVel);
+        //+ int(score/8);
+      }
     }
   }
 
@@ -390,8 +445,15 @@ class Enemy {
     translate(pos.x, pos.y);
     if(!circleTouched) {
       noStroke();
-      fill(255, 255, 255, circleTransparency + hp);
-      ellipse(0, 0, 2*size*circleFactor + circleAdd, 2*size*circleFactor + circleAdd);
+      if(type == "boss1") {
+        fill(255, 255, 255, circleTransparency + hp/8);
+        ellipse(0, 0, 2*size*bossCFactor, 2*size*bossCFactor);
+        fill(0);
+        ellipse(0, 0, (size+dodger.size), (size+dodger.size));
+      } else {
+        fill(255, 255, 255, circleTransparency + hp);
+        ellipse(0, 0, 2*size*circleFactor + circleAdd, 2*size*circleFactor + circleAdd);
+      }
       noStroke();
       // //comment to remove lag
       // fill(255, 255, 255, min(255, 5 + 2*hp));
@@ -417,13 +479,13 @@ class Enemy {
     strokeWeight(3);
     if(type == "ship") {
       beginShape();
-        vertex(-0.5f * size,   -1 * size);
+        vertex(-1 * size,   -1 * size);
         vertex(0          ,    1 * size);
         vertex(0.5f * size ,   -1 * size);
         vertex(0          , -0.3f * size);
-        vertex(-0.5f * size,   -1 * size);
+        vertex(-1 * size,   -1 * size);
       endShape();
-    } else if(type == "asteroid") {
+    } else if(type == "asteroid" || type == "boss1") {
       rotate(frameCount*0.01f);
           beginShape();
             vertex(0, -rndmAst[1]);
@@ -433,6 +495,14 @@ class Enemy {
             vertex(-12, -12);
             vertex(0, -rndmAst[1]);
           endShape();
+      } else if(type == "kamikaze") {
+        beginShape();
+          vertex(-0.5f * size,   -1 * size);
+          vertex(0          ,    1 * size);
+          vertex(0.5f * size ,   -1 * size);
+          vertex(0          , -0.3f * size);
+          vertex(-0.5f * size,   -1 * size);
+        endShape();
       }
 
     // line(0, 0, move.x, move.y);
@@ -441,6 +511,14 @@ class Enemy {
   }
 
   public void update() {
+    if(type == "kamikaze" && !circleTouched){
+      //slowly turn towards the player
+      PVector nPos = new PVector(-pos.x + dodger.pos.x, -pos.y + dodger.pos.y);
+      PVector pointToPlayer = PVector.fromAngle(nPos.heading() - HALF_PI);
+      PVector direction = PVector.fromAngle(a);
+      direction.lerp(pointToPlayer, 0.05f);
+      a = direction.heading();
+    }
     move = new PVector(0, vel);
     move = move.rotate(a);
     pos.add(move);
@@ -448,7 +526,27 @@ class Enemy {
   }
 
   public boolean bounds() {
-    if(pos.x < 0-2*(circleFactor+circleAdd) || pos.x > width+2*(circleFactor+circleAdd)
+    if(type == "boss1"){
+    // put boss back into the field if aura was not broken. Also, increase it's velocity
+      if(pos.x < 0-bossCFactor && !circleTouched){
+        pos.x += width + 7.9f*bossCFactor;
+        vel *= 1.02f;
+      } else if(pos.x > width+bossCFactor && !circleTouched){
+        pos.x -= width + 7.9f*bossCFactor;
+        vel *= 1.02f;
+      } else if(pos.y < 0-bossCFactor && !circleTouched){
+        pos.y += height + 7.9f*bossCFactor;
+        vel *= 1.02f;
+      } else if(pos.y > height+bossCFactor && !circleTouched){
+        pos.y -= height + 7.9f*bossCFactor;
+        vel *= 1.02f;
+      } else if ( //if one of the above and circleTouched
+        (pos.x < 0-3*bossCFactor) || (pos.x > width+3*bossCFactor && !circleTouched)
+        || (pos.y < 0-3*bossCFactor) || (pos.y > height+3*bossCFactor && !circleTouched)) {
+        if(circleTouched) return true;
+      }
+      return false;
+    } else if(pos.x < 0-2*(circleFactor+circleAdd) || pos.x > width+2*(circleFactor+circleAdd)
     || pos.y < 0-2*(circleFactor+circleAdd) || pos.y > height+2*(circleFactor+circleAdd) ) {
       return true;
     } else {
