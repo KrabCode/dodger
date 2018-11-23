@@ -114,6 +114,8 @@ void runGame() {
         if(enemies[eNum].type == "boss1") {
           score += 5;
           bossActive = false;
+        } else if(enemies[eNum].type == "kamikaze") {
+          score += 2.5;
         } else if(enemies[eNum].type == "ship") {
           score += 1.5;
         } else {
