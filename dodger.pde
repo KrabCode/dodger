@@ -1,3 +1,11 @@
+import ddf.minim.*;
+Minim minim;
+
+// Load the sound files
+AudioSample pop, sLeft, sRight, snap0, snap1, snap2, gameover;
+AudioPlayer bg;
+boolean gameOverSoundPlayed;
+
 //PShape logo;
 
 float score;
@@ -41,11 +49,25 @@ float bossCFactor = 1.5;                // boss has smaller circle and no add
 void setup() {
   // setup screen
   // size(1000, 1000);
-  fullScreen(P2D);
+  fullScreen();
   orientation(PORTRAIT);
   frameRate(60);
   smooth(5);
   background(0);
+
+  // Create a Sound object for controlling the synthesis engine sample rate.
+
+  //sounds
+  minim = new Minim(this);
+  int bufferSize = 512;
+  pop = minim.loadSample("pop.wav", bufferSize);
+  sLeft = minim.loadSample("perc1.wav", bufferSize);
+  sRight = minim.loadSample("perc2.wav", bufferSize);
+  snap0 = minim.loadSample("snap0.wav", bufferSize);
+  snap1 = minim.loadSample("snap1.wav", bufferSize);
+  snap2 = minim.loadSample("snap2.wav", bufferSize);
+  bg = minim.loadFile("bg.wav", bufferSize);
+  gameover = minim.loadSample("gameover.wav", bufferSize);
 
   //logo = loadShape("logo.svg");
   //shapeMode(CORNERS);
@@ -56,7 +78,7 @@ void setup() {
 // set up the variables for game initialisation
 void initGame() {
   gameOver = false;
-  score = 0;
+  score = 60;
 
   // dodger attributes
   rotVel = 20;
@@ -93,6 +115,13 @@ void draw() {
 
 // perform a frame of the gameplay
 void runGame() {
+  if(bg.position() == bg.length()) {
+    bg.rewind();
+  }
+  if(!bg.isPlaying()) {
+    gameover.stop();
+    bg.play();
+  }
   background(0, 0, 0);
   textSize(30);
   fill(255);
@@ -106,6 +135,7 @@ void runGame() {
       newEnemy();
     }
     if(enemies[eNum].collision()){
+      gameOverSoundPlayed = false;
       gameOver = true;
     }
     if(enemies[eNum].circleCollision()){
@@ -118,6 +148,18 @@ void runGame() {
           score += 1.5;
         } else {
           score++;
+        }
+
+        switch(frameCount % 3) {
+          case 0:
+            snap1.trigger();
+            break;
+          case 1:
+            snap1.trigger();
+            break;
+          case 2:
+            snap2.trigger();
+            break;
         }
         enemies[eNum].circleTouched = true;
         enemies[eNum].vel *= 0.8; //reduce enemy velocity when circle disappears
@@ -176,6 +218,11 @@ void newEnemy() {
 }
 
 void showScore() {
+  if(!gameOverSoundPlayed){
+    bg.pause();
+    gameover.trigger();
+    gameOverSoundPlayed = true;
+  }
   background(0);
   textSize(150);
   fill(255);
@@ -197,6 +244,19 @@ void showScore() {
 
 
 ///////////////INPUTS///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void keyPressed() { // listen for user input
+  if(gameOver && keyCode == ' '){
+    gameOver = !gameOver;
+    initGame();
+  } else {
+    if(!clockwise){
+      rotVel = 20;
+      sRight.stop();
+      sRight.trigger();
+    }
+    clockwise = true;
+    }
+  }
 
 void touchStarted() {
   if(gameOver){
@@ -205,14 +265,29 @@ void touchStarted() {
   } else {
     if(!clockwise){
       rotVel = 20;
+      sRight.stop();
+      sRight.trigger();
     }
     clockwise = true;
     }
 }
 
-void touchEnded() {
+void keyReleased() { // listen for user input
   if(clockwise){
-    rotVel = 20;
+    sLeft.stop();
+    sRight.stop();
+    sLeft.trigger();
   }
   clockwise = false;
+  rotVel = 20;
+}
+
+void touchEnded() {
+  if(clockwise){
+    sLeft.stop();
+    sRight.stop();
+    sLeft.trigger();
+  }
+  clockwise = false;
+  rotVel = 20;
 }
