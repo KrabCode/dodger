@@ -53,7 +53,7 @@ boolean gameOver;
 
 float changeVel = 1;                  // modifies all velocities
 
-// Dodger
+/// Dodger
 Dodger dodger;
 float startVel;                       // beginning velocity of dodger, increases by scVel for every score
 float scVel;
@@ -63,11 +63,11 @@ float scAcc;
 float rotDamp = 0.995f;                // rotation velocity dampening
 boolean clockwise;                    // is the player turning clockwise
 
-// Enemy
+/// Enemy
 int maxE = 20;
 Enemy[] enemies = new Enemy[maxE];
 int eNum;                             // index of current enemy
-int sActive = 9;                      // enemies active at start
+int sActive = 5;                          // enemies active at start
 int eActive;                          // enemies currently active
 float limiter;                        // makes the arrow more narrow
 float startEVel;                      // beginning velocity of enemies, increases by scEVel for every score
@@ -79,11 +79,11 @@ float kamiChance;                     // chance to spawn kamikaze, starts at 0 i
 boolean bossActive;                   // tells us if there is a boss on the field
 float modifier;                       // used to modify some starting values
 
-// Aura
+/// Aura
 int circleFactor = 2;                 // size of aura per enemy size
 int circleAdd = 220;                  // added to size of aura
 int circleTransparency = 20;
-float bossCFactor = 1.5f;                // boss has smaller circle and no add
+float bossCFactor = 1.5f;              // boss has smaller circle and no add
 
 public void setup() {
   // setup screen
@@ -95,14 +95,12 @@ public void setup() {
   
   background(0);
 
-  // Create a Sound object for controlling the synthesis engine sample rate.
-
   //sounds
   minim = new Minim(this);
   int bufferSize = 512;
   pop = minim.loadSample("pop.wav", bufferSize);
-  sLeft = minim.loadSample("perc1.wav", bufferSize);
-  sRight = minim.loadSample("perc2.wav", bufferSize);
+  sLeft = minim.loadSample("perc1l.wav", bufferSize);
+  sRight = minim.loadSample("perc2l.wav", bufferSize);
   snap0 = minim.loadSample("snap0.wav", bufferSize);
   snap1 = minim.loadSample("snap1.wav", bufferSize);
   snap2 = minim.loadSample("snap2.wav", bufferSize);
@@ -115,17 +113,17 @@ public void setup() {
   initGame(); // set up the variables for game initialisation
 }
 
-// set up the variables for game initialisation
+//// set up the variables for game initialisation
 public void initGame() {
   gameOver = false;
-  score = 0;
+  score = 40;
 
   // dodger attributes
   rotVel = 20;
   startVel = 3.1f * changeVel;
   scVel = 0.015f * changeVel;
-  rotAcc = 1.8f * changeVel;
-  scAcc = 0.01f * changeVel;
+  rotAcc = 1.6f * changeVel;
+  scAcc = 0.007f * changeVel;
   dodger = new Dodger(width/2, height/2, 0);
 
   //enemy attributes
@@ -145,6 +143,7 @@ public void initGame() {
 
 /////UP = SETUP//////////DOWN = UPDATE///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+//// draw function with gamestates
 public void draw() {
   if(!gameOver){
     runGame();
@@ -153,7 +152,7 @@ public void draw() {
   }
 }
 
-// perform a frame of the gameplay
+//// perform a frame of the gameplay
 public void runGame() {
   if(bg.position() == bg.length()) {
     bg.rewind();
@@ -165,22 +164,26 @@ public void runGame() {
   background(0, 0, 0);
   textSize(30);
   fill(255);
-  //adjust amount of enemies according to score
+  // adjust amount of enemies according to score
   if(PApplet.parseInt(score/25 + sActive) > eActive && eActive < maxE) {
-    //eActive++;
+    eActive++;
   }
   for(eNum = 0; eNum < eActive; eNum++){
-    enemies[eNum].update();
-    if (enemies[eNum].bounds()) {
+    enemies[eNum].update(); // update enemy position
+    // if the enemy is out of bounds and not recently spawned
+    if (enemies[eNum].bounds() && millis() - enemies[eNum].spawnTimer > 1000) {
       newEnemy();
     }
+    // if dodger collides with an enemy
     if(enemies[eNum].collision()){
       gameOverSoundPlayed = false;
       gameOver = true;
     }
+    // if dodger is colliding with a circle
     if(enemies[eNum].circleCollision()){
-      enemies[eNum].hp--;
+      enemies[eNum].hp--; // decrease life of enemies aura
       if(enemies[eNum].circleTouched == false && enemies[eNum].hp < 0) {
+        // increase score depending on enemy type
         if(enemies[eNum].type == "boss1") {
           score += 5;
           bossActive = false;
@@ -191,10 +194,10 @@ public void runGame() {
         } else {
           score++;
         }
-
+        //play a random snap sound
         switch(frameCount % 3) {
           case 0:
-            snap1.trigger();
+            snap0.trigger();
             break;
           case 1:
             snap1.trigger();
@@ -204,29 +207,28 @@ public void runGame() {
             break;
         }
         enemies[eNum].circleTouched = true;
-        enemies[eNum].vel *= 0.8f; //reduce enemy velocity when circle disappears
+        enemies[eNum].vel *= 0.6f;         // reduce enemy velocity when circle disappears
       }
     }
-    enemies[eNum].drawCircle();
+    enemies[eNum].drawCircle();           // draws circle first so no overlap with enemies
   }
   for(eNum = 0; eNum < eActive; eNum++){
     enemies[eNum].draw();
   }
 
   dodger.update();
-  dodger.bounds();
+  dodger.bounds();                        // check if dodger is still in bounds (if not, put back)
   dodger.draw();
-  rotAcc = (2 + score*scAcc) * changeVel; //increase the rotation velocity by rotation acceleration
-  rotVel += rotAcc;
-  rotVel *= rotDamp;
+  rotAcc = (2 + score*scAcc) * changeVel; // increase the rotation velocity by rotation acceleration
+  rotVel += rotAcc;                       // velocity increases by acceleration
+  rotVel *= rotDamp;                      // dampen the rotation velocity
 }
 
+//// spawn a new enemy
 public void newEnemy() {
-  int border;
-  border = (int) random(4);
-  float type;
-  type = random(1);
   String thisType;
+  int border = (int) random(4);         // determine which edge enemies spawn from
+  float type = random(1);               // determine which type the enemy is going to be
   if(score > 5 && score % 60 <= 5 && !bossActive) {
     thisType = "boss1";
     bossActive = true;
@@ -239,31 +241,32 @@ public void newEnemy() {
     thisType = "asteroid";
   }
 
+  float enemyDiameter = (startSize + score*scESize) * circleFactor + circleAdd;
   if(border == 0) {
     //left border
-    enemies[eNum] = new Enemy(0-((10 + score*scESize)*circleFactor + circleAdd), random(height), random(PI + limiter, TWO_PI - limiter), startEVel, thisType);
+    enemies[eNum] = new Enemy(0-enemyDiameter, random(height), random(PI + limiter, TWO_PI - limiter), startEVel, thisType);
   }
   if(border == 1) {
     //top border
-    enemies[eNum] = new Enemy(random(width), 0-((10 + score*scESize)*circleFactor + circleAdd), random(HALF_PI + PI + limiter, 3*QUARTER_PI - limiter), startEVel, thisType);
+    enemies[eNum] = new Enemy(random(width), 0-enemyDiameter, random(HALF_PI + PI + limiter, 3*QUARTER_PI - limiter), startEVel, thisType);
   }
   if(border == 2) {
     //right border
-    enemies[eNum] = new Enemy(width+((10 + score*scESize)*circleFactor + circleAdd), random(height), random(TWO_PI + limiter, TWO_PI + PI - limiter), startEVel, thisType);
+    enemies[eNum] = new Enemy(width+enemyDiameter, random(height), random(TWO_PI + limiter, TWO_PI + PI - limiter), startEVel, thisType);
   }
   if(border == 3) {
     //bottom border
-    enemies[eNum] = new Enemy(random(height), height+((10 + score*scESize)*circleFactor + circleAdd), random(3*QUARTER_PI + limiter, HALF_PI + PI - limiter), startEVel, thisType);
+    enemies[eNum] = new Enemy(random(height), height+enemyDiameter, random(3*QUARTER_PI + limiter, HALF_PI + PI - limiter), startEVel, thisType);
   }
-  modifier = 0;
-  startVel += 0.1f;
+  modifier = 0; // reset the modifier (used in enemy class for special enemies)
 }
 
+//// show the game over screen
 public void showScore() {
   if(!gameOverSoundPlayed){
-    bg.pause();
-    gameover.trigger();
-    gameOverSoundPlayed = true;
+    bg.pause(); //pause background sound
+    gameover.trigger(); //play the game over sample
+    gameOverSoundPlayed = true; //so it doesnt play again
   }
   background(0);
   textSize(150);
@@ -284,54 +287,26 @@ public void showScore() {
   // wait for key input to start new game
 }
 
-
 ///////////////INPUTS///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-public void keyPressed() { // listen for user input
+public void keyPressed() { // listen for user input // touchStarted
   if(gameOver && keyCode == ' '){
     gameOver = !gameOver;
     initGame();
   } else {
     if(!clockwise){
-      rotVel = 20;
-      sRight.stop();
       sRight.trigger();
+      rotVel = 20;
     }
     clockwise = true;
     }
   }
 
-public void touchStarted() {
-  if(gameOver){
-    gameOver = !gameOver;
-    initGame();
-  } else {
-    if(!clockwise){
-      rotVel = 20;
-      sRight.stop();
-      sRight.trigger();
-    }
-    clockwise = true;
-    }
-}
-
-public void keyReleased() { // listen for user input
+public void keyReleased() { // listen for user input // touchEnded
   if(clockwise){
-    sLeft.stop();
-    sRight.stop();
     sLeft.trigger();
+    rotVel = 20;
   }
   clockwise = false;
-  rotVel = 20;
-}
-
-public void touchEnded() {
-  if(clockwise){
-    sLeft.stop();
-    sRight.stop();
-    sLeft.trigger();
-  }
-  clockwise = false;
-  rotVel = 20;
 }
 class Dodger {
 
@@ -347,6 +322,7 @@ class Dodger {
     a = _a;
   }
 
+  //// draw the enemy
   public void draw() {
     rectMode(CENTER);
     pushMatrix();
@@ -358,11 +334,11 @@ class Dodger {
     line(-0.5f * size, -1 * size, 0, 1 * size);
     line(0.5f * size, -1 * size, 0, 1 * size);
     line(-0.4f * size, -0.6f * size, 0.4f * size, -0.6f * size); //back line
-    // line(0, 0, move.x, move.y);
     popMatrix();
 
   }
 
+  //// update dodger position
   public void update() {
     //dodger moves
     move = new PVector(0, vel + score*scVel); // velocity adjust
@@ -375,6 +351,7 @@ class Dodger {
     pos.add(move);
   }
 
+  //// check if dodger is inside the boundaries
   public void bounds() {
     if(pos.x < 0+size*2/3) {
       pos.x = 0+size*2/3;
@@ -401,7 +378,9 @@ class Enemy {
   float vel;
   float [] rndmAst = new float[16]; //random zahlen array fuer asteroid vertex
   boolean circleTouched = false;
+  int spawnTimer = millis();
 
+  //// construct the enemy
   Enemy (float _x, float _y, float _a, float _vel, String _type) {
     pos = new PVector(_x, _y);
     a = _a;
@@ -430,8 +409,8 @@ class Enemy {
       hp = PApplet.parseInt((25 + score/8) /changeVel);
     }
     if(type == "boss1"){
-      size += modifier;
       size *= 2;
+      size += modifier;
       for (int i=0; i < rndmAst.length; i++){
         rndmAst[i] = random(4, size);
         hp = PApplet.parseInt(400+modifier / changeVel);
@@ -440,6 +419,7 @@ class Enemy {
     }
   }
 
+  //// draw the aura of the enemy
   public void drawCircle() {
     pushMatrix();
     translate(pos.x, pos.y);
@@ -455,13 +435,11 @@ class Enemy {
         ellipse(0, 0, 2*size*circleFactor + circleAdd, 2*size*circleFactor + circleAdd);
       }
       noStroke();
-      // //comment to remove lag
-      // fill(255, 255, 255, min(255, 5 + 2*hp));
-      // ellipse(0, 0, 0.3*(size*circleFactor + circleAdd), 0.3*(size*circleFactor + circleAdd));
     }
     popMatrix();
   }
 
+  //// draw the enemy
   public void draw() {
     fill(0);
     rectMode(CENTER);
@@ -504,12 +482,10 @@ class Enemy {
           vertex(-0.5f * size,   -1 * size);
         endShape();
       }
-
-    // line(0, 0, move.x, move.y);
     popMatrix();
-
   }
 
+  //// update enemy position
   public void update() {
     if(type == "kamikaze" && !circleTouched){
       //slowly turn towards the player
@@ -525,9 +501,10 @@ class Enemy {
     //dodger moves
   }
 
+  //// check if enemy is still inside bounds
   public boolean bounds() {
     if(type == "boss1"){
-    // put boss back into the field if aura was not broken. Also, increase it's velocity
+    // put boss back into the field if aura was not broken. Also, increase it's velocity.
       if(pos.x < 0-bossCFactor && !circleTouched){
         pos.x += width + 7.9f*bossCFactor;
         vel *= 1.02f;
@@ -546,14 +523,15 @@ class Enemy {
         if(circleTouched) return true;
       }
       return false;
-    } else if(pos.x < 0-2*(circleFactor+circleAdd) || pos.x > width+2*(circleFactor+circleAdd)
-    || pos.y < 0-2*(circleFactor+circleAdd) || pos.y > height+2*(circleFactor+circleAdd) ) {
+    } else if(pos.x < 0-1.1f*(circleFactor+circleAdd) || pos.x > width+1.1f*(circleFactor+circleAdd)
+           || pos.y < 0-1.1f*(circleFactor+circleAdd) || pos.y > height+1.1f*(circleFactor+circleAdd) ) {
       return true;
     } else {
       return false;
     }
   }
 
+  //// check if dodger collides with the enemy
   public boolean collision() {
     if(pos.dist(dodger.pos) <= (0.5f*(size+dodger.size)) ) {
       return true;
@@ -562,6 +540,7 @@ class Enemy {
     }
   }
 
+  //// check if dodger collides with the enemies aura
   public boolean circleCollision() {
     if(pos.dist(dodger.pos) <= (size*circleFactor + circleAdd/2 + dodger.size) ) {
       return true;
@@ -571,7 +550,7 @@ class Enemy {
   }
 
 }
-  public void settings() {  fullScreen();  smooth(5); }
+  public void settings() {  fullScreen(P2D);  smooth(5); }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "dodger" };
     if (passedArgs != null) {

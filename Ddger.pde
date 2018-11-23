@@ -12,6 +12,7 @@ class Dodger {
     a = _a;
   }
 
+  //// draw the enemy
   void draw() {
     rectMode(CENTER);
     pushMatrix();
@@ -23,11 +24,11 @@ class Dodger {
     line(-0.5 * size, -1 * size, 0, 1 * size);
     line(0.5 * size, -1 * size, 0, 1 * size);
     line(-0.4 * size, -0.6 * size, 0.4 * size, -0.6 * size); //back line
-    // line(0, 0, move.x, move.y);
     popMatrix();
 
   }
 
+  //// update dodger position
   void update() {
     //dodger moves
     move = new PVector(0, vel + score*scVel); // velocity adjust
@@ -40,6 +41,7 @@ class Dodger {
     pos.add(move);
   }
 
+  //// check if dodger is inside the boundaries
   void bounds() {
     if(pos.x < 0+size*2/3) {
       pos.x = 0+size*2/3;

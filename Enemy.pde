@@ -11,7 +11,9 @@ class Enemy {
   float vel;
   float [] rndmAst = new float[16]; //random zahlen array fuer asteroid vertex
   boolean circleTouched = false;
+  int spawnTimer = millis();
 
+  //// construct the enemy
   Enemy (float _x, float _y, float _a, float _vel, String _type) {
     pos = new PVector(_x, _y);
     a = _a;
@@ -40,8 +42,8 @@ class Enemy {
       hp = int((25 + score/8) /changeVel);
     }
     if(type == "boss1"){
-      size += modifier;
       size *= 2;
+      size += modifier;
       for (int i=0; i < rndmAst.length; i++){
         rndmAst[i] = random(4, size);
         hp = int(400+modifier / changeVel);
@@ -50,6 +52,7 @@ class Enemy {
     }
   }
 
+  //// draw the aura of the enemy
   void drawCircle() {
     pushMatrix();
     translate(pos.x, pos.y);
@@ -65,13 +68,11 @@ class Enemy {
         ellipse(0, 0, 2*size*circleFactor + circleAdd, 2*size*circleFactor + circleAdd);
       }
       noStroke();
-      // //comment to remove lag
-      // fill(255, 255, 255, min(255, 5 + 2*hp));
-      // ellipse(0, 0, 0.3*(size*circleFactor + circleAdd), 0.3*(size*circleFactor + circleAdd));
     }
     popMatrix();
   }
 
+  //// draw the enemy
   void draw() {
     fill(0);
     rectMode(CENTER);
@@ -114,12 +115,10 @@ class Enemy {
           vertex(-0.5 * size,   -1 * size);
         endShape();
       }
-
-    // line(0, 0, move.x, move.y);
     popMatrix();
-
   }
 
+  //// update enemy position
   void update() {
     if(type == "kamikaze" && !circleTouched){
       //slowly turn towards the player
@@ -135,9 +134,10 @@ class Enemy {
     //dodger moves
   }
 
+  //// check if enemy is still inside bounds
   boolean bounds() {
     if(type == "boss1"){
-    // put boss back into the field if aura was not broken. Also, increase it's velocity
+    // put boss back into the field if aura was not broken. Also, increase it's velocity.
       if(pos.x < 0-bossCFactor && !circleTouched){
         pos.x += width + 7.9*bossCFactor;
         vel *= 1.02;
@@ -156,14 +156,15 @@ class Enemy {
         if(circleTouched) return true;
       }
       return false;
-    } else if(pos.x < 0-2*(circleFactor+circleAdd) || pos.x > width+2*(circleFactor+circleAdd)
-    || pos.y < 0-2*(circleFactor+circleAdd) || pos.y > height+2*(circleFactor+circleAdd) ) {
+    } else if(pos.x < 0-1.1*(circleFactor+circleAdd) || pos.x > width+1.1*(circleFactor+circleAdd)
+           || pos.y < 0-1.1*(circleFactor+circleAdd) || pos.y > height+1.1*(circleFactor+circleAdd) ) {
       return true;
     } else {
       return false;
     }
   }
 
+  //// check if dodger collides with the enemy
   boolean collision() {
     if(pos.dist(dodger.pos) <= (0.5*(size+dodger.size)) ) {
       return true;
@@ -172,6 +173,7 @@ class Enemy {
     }
   }
 
+  //// check if dodger collides with the enemies aura
   boolean circleCollision() {
     if(pos.dist(dodger.pos) <= (size*circleFactor + circleAdd/2 + dodger.size) ) {
       return true;
