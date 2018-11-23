@@ -4,7 +4,7 @@ class Enemy {
   PVector move;
   PVector nPos;
   String type;
-  //ship, asteroid
+  //ship, kamikaze, asteroid
   int hp; // health points of circle
   float a;
   float size;
@@ -30,8 +30,23 @@ class Enemy {
       //set angle to player
       PVector nPos = new PVector(-pos.x + dodger.pos.x, -pos.y + dodger.pos.y);
       a = nPos.heading() - HALF_PI;
-      vel *= 2;
-      hp = int((25 + score/15) /changeVel);
+      vel *= 1.5;
+      hp = int((30 + score/15) /changeVel);
+    }
+    if(type == "kamikaze"){
+      //set angle to player
+      PVector nPos = new PVector(-pos.x + dodger.pos.x, -pos.y + dodger.pos.y);
+      a = nPos.heading() - HALF_PI;
+      hp = int((25 + score/8) /changeVel);
+    }
+    if(type == "boss1"){
+      size += modifier;
+      size *= 2;
+      for (int i=0; i < rndmAst.length; i++){
+        rndmAst[i] = random(4, size);
+        hp = int(400+modifier / changeVel);
+        //+ int(score/8);
+      }
     }
   }
 
@@ -40,8 +55,15 @@ class Enemy {
     translate(pos.x, pos.y);
     if(!circleTouched) {
       noStroke();
-      fill(255, 255, 255, circleTransparency + hp);
-      ellipse(0, 0, 2*size*circleFactor + circleAdd, 2*size*circleFactor + circleAdd);
+      if(type == "boss1") {
+        fill(255, 255, 255, circleTransparency + hp/8);
+        ellipse(0, 0, 2*size*bossCFactor, 2*size*bossCFactor);
+        fill(0);
+        ellipse(0, 0, (size+dodger.size), (size+dodger.size));
+      } else {
+        fill(255, 255, 255, circleTransparency + hp);
+        ellipse(0, 0, 2*size*circleFactor + circleAdd, 2*size*circleFactor + circleAdd);
+      }
       noStroke();
       // //comment to remove lag
       // fill(255, 255, 255, min(255, 5 + 2*hp));
@@ -67,13 +89,13 @@ class Enemy {
     strokeWeight(3);
     if(type == "ship") {
       beginShape();
-        vertex(-0.5 * size,   -1 * size);
+        vertex(-1 * size,   -1 * size);
         vertex(0          ,    1 * size);
         vertex(0.5 * size ,   -1 * size);
         vertex(0          , -0.3 * size);
-        vertex(-0.5 * size,   -1 * size);
+        vertex(-1 * size,   -1 * size);
       endShape();
-    } else if(type == "asteroid") {
+    } else if(type == "asteroid" || type == "boss1") {
       rotate(frameCount*0.01);
           beginShape();
             vertex(0, -rndmAst[1]);
@@ -83,6 +105,14 @@ class Enemy {
             vertex(-12, -12);
             vertex(0, -rndmAst[1]);
           endShape();
+      } else if(type == "kamikaze") {
+        beginShape();
+          vertex(-0.5 * size,   -1 * size);
+          vertex(0          ,    1 * size);
+          vertex(0.5 * size ,   -1 * size);
+          vertex(0          , -0.3 * size);
+          vertex(-0.5 * size,   -1 * size);
+        endShape();
       }
 
     // line(0, 0, move.x, move.y);
@@ -91,6 +121,14 @@ class Enemy {
   }
 
   void update() {
+    if(type == "kamikaze" && !circleTouched){
+      //slowly turn towards the player
+      PVector nPos = new PVector(-pos.x + dodger.pos.x, -pos.y + dodger.pos.y);
+      PVector pointToPlayer = PVector.fromAngle(nPos.heading() - HALF_PI);
+      PVector direction = PVector.fromAngle(a);
+      direction.lerp(pointToPlayer, 0.05);
+      a = direction.heading();
+    }
     move = new PVector(0, vel);
     move = move.rotate(a);
     pos.add(move);
@@ -98,7 +136,27 @@ class Enemy {
   }
 
   boolean bounds() {
-    if(pos.x < 0-2*(circleFactor+circleAdd) || pos.x > width+2*(circleFactor+circleAdd)
+    if(type == "boss1"){
+    // put boss back into the field if aura was not broken. Also, increase it's velocity
+      if(pos.x < 0-bossCFactor && !circleTouched){
+        pos.x += width + 7.9*bossCFactor;
+        vel *= 1.02;
+      } else if(pos.x > width+bossCFactor && !circleTouched){
+        pos.x -= width + 7.9*bossCFactor;
+        vel *= 1.02;
+      } else if(pos.y < 0-bossCFactor && !circleTouched){
+        pos.y += height + 7.9*bossCFactor;
+        vel *= 1.02;
+      } else if(pos.y > height+bossCFactor && !circleTouched){
+        pos.y -= height + 7.9*bossCFactor;
+        vel *= 1.02;
+      } else if ( //if one of the above and circleTouched
+        (pos.x < 0-3*bossCFactor) || (pos.x > width+3*bossCFactor && !circleTouched)
+        || (pos.y < 0-3*bossCFactor) || (pos.y > height+3*bossCFactor && !circleTouched)) {
+        if(circleTouched) return true;
+      }
+      return false;
+    } else if(pos.x < 0-2*(circleFactor+circleAdd) || pos.x > width+2*(circleFactor+circleAdd)
     || pos.y < 0-2*(circleFactor+circleAdd) || pos.y > height+2*(circleFactor+circleAdd) ) {
       return true;
     } else {
