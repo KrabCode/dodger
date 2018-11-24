@@ -2,18 +2,14 @@
 **GRAPHICS**
 
 * make proper graphics for kamikaze and boss1
+* create graphics for future enemies
 
 **MENU**
 
 * make a menu that is more than a splashscreen
 * toggle music and fx on/off
 * show highscore
-
-**TUTORIAL**
-
-* make a tutorial
-* begin with just auras, gradually introduce enemies (not all types needed)
-* death just respawns
+* arrow key and mouse/touch input
 
 **GAME LOGIC**
 
@@ -25,8 +21,8 @@
 **DIAGNOSTICS**
 
 * make a line on top of screen that displays current velocities
-
 * make the diagnostics togglable with a key
+* include some hotkeys to modify values (score, velocities for balancing)
 
 **BALANCE**
 
@@ -45,7 +41,12 @@
   * improve the steering wobble sound
   * have higher variety of aura 'pop' sounds
 
-**RANDOM IDEAS**
+**RANDOM IDEAS FOR LATER**
+
+* tutorial
+  * make a tutorial
+  * begin with just auras, gradually introduce enemies (not all types needed)
+  * death just respawns
 
 * two player modes: 
   * **survival**: no PVP collisions, last dodger standing

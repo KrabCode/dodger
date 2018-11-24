@@ -24,6 +24,15 @@ AudioSample pop, sLeft, sRight, snap0, snap1, snap2, gameover;
 AudioPlayer bg;
 boolean gameOverSoundPlayed;
 
+//prepare scaling screen to fixed resolution
+PGraphics pg;
+int pgWidth = 640;
+// 1920;
+int pgHeight = 480;
+//1080;
+PGraphics pgfeedback;
+float feedbackLevel = 0.9f;
+
 //PShape logo;
 
 float score;
@@ -69,6 +78,9 @@ public void setup() {
   // size(1000, 1000);
   
   orientation(PORTRAIT);
+  //prepare scaling screen to fixed resolution
+  pg = createGraphics(pgWidth, pgHeight, P2D);
+  pgfeedback = createGraphics(pgWidth, pgHeight, P2D);
   noCursor();
   frameRate(60);
   
@@ -103,7 +115,7 @@ public void initGame() {
   scVel = 0.015f * changeVel;
   rotAcc = 1.6f * changeVel;
   scAcc = 0.007f * changeVel;
-  dodger = new Dodger(width/2, height/2, 0);
+  dodger = new Dodger(pgWidth/2, height/2, 0);
 
   //enemy attributes
   startEVel = 3 * changeVel;
@@ -124,11 +136,17 @@ public void initGame() {
 
 //// draw function with gamestates
 public void draw() {
+  pg.beginDraw();
+  pg.background(0);
+
   if(!gameOver){
     runGame();
   } else {
     showScore();
   }
+
+  pg.endDraw();
+  image(pg, 0, 0, width, height);
 }
 
 //// perform a frame of the gameplay
@@ -140,9 +158,9 @@ public void runGame() {
     gameover.stop();
     bg.play();
   }
-  background(0, 0, 0);
-  textSize(30);
-  fill(255);
+  pg.background(0, 0, 0);
+  pg.textSize(30);
+  pg.fill(255);
   // adjust amount of enemies according to score
   if(PApplet.parseInt(score/25 + sActive) > eActive && eActive < maxE) {
     eActive++;
@@ -203,6 +221,8 @@ public void runGame() {
   rotVel *= rotDamp;                      // dampen the rotation velocity
 }
 
+/////GAME LOGICKS/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 //// spawn a new enemy
 public void newEnemy() {
   String thisType;
@@ -227,11 +247,11 @@ public void newEnemy() {
   }
   if(border == 1) {
     //top border
-    enemies[eNum] = new Enemy(random(width), 0-enemyDiameter, random(HALF_PI + PI + limiter, 3*QUARTER_PI - limiter), startEVel, thisType);
+    enemies[eNum] = new Enemy(random(pgWidth), 0-enemyDiameter, random(HALF_PI + PI + limiter, 3*QUARTER_PI - limiter), startEVel, thisType);
   }
   if(border == 2) {
     //right border
-    enemies[eNum] = new Enemy(width+enemyDiameter, random(height), random(TWO_PI + limiter, TWO_PI + PI - limiter), startEVel, thisType);
+    enemies[eNum] = new Enemy(pgWidth+enemyDiameter, random(height), random(TWO_PI + limiter, TWO_PI + PI - limiter), startEVel, thisType);
   }
   if(border == 3) {
     //bottom border
@@ -247,26 +267,41 @@ public void showScore() {
     gameover.trigger(); //play the game over sample
     gameOverSoundPlayed = true; //so it doesnt play again
   }
-  background(0);
-  textSize(150);
-  fill(255);
-  stroke(255);
-  strokeWeight(6);
-  textAlign(CENTER, CENTER);
+  pg.background(0);
+  pg.textSize(150);
+  pg.fill(255);
+  pg.stroke(255);
+  pg.strokeWeight(6);
+  pg.textAlign(CENTER, CENTER);
   // draw logo
   //int border = 15;
-  //shape(logo, border, border+500, width-border, 750);
+  //shape(logo, border, border+500, pgWidth-border, 750);
   //update score
   if (score > hiscore){
     hiscore = PApplet.parseInt(score);
   }
   // draw menu, score & high score
-  text(hiscore, width*2/4, height*1/4 -50);
-  text(PApplet.parseInt(score), width*2/4, height*3.3f/4 -50);
+  pg.text(hiscore, pgWidth*2/4, pgHeight*1/4 -50);
+  pg.text(PApplet.parseInt(score), pgWidth*2/4, pgHeight*3.3f/4 -50);
+
   // wait for key input to start new game
 }
 
-///////////////INPUTS///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////GRAPHICS////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//Feedback Functions
+
+public void feedbackCapture(PGraphics output) {
+  pg.loadPixels();
+  output.loadPixels();
+
+  arrayCopy(pg.pixels, output.pixels);
+
+  output.updatePixels();
+}
+
+///////////////INPUTS////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 public void keyPressed() { // listen for user input // touchStarted
   if(gameOver && keyCode == ' '){
     gameOver = !gameOver;
@@ -301,20 +336,19 @@ class Dodger {
     a = _a;
   }
 
-  //// draw the enemy
+  //// draw dodger
   public void draw() {
-    rectMode(CENTER);
-    pushMatrix();
-    translate(pos.x, pos.y);
-    rotate(a);
+    pg.rectMode(CENTER);
+    pg.pushMatrix();
+    pg.translate(pos.x, pos.y);
+    pg.rotate(a);
     // rect(0, 0, sin(a)*30, 50);
-    stroke(255);
-    strokeWeight(6);
-    line(-0.5f * size, -1 * size, 0, 1 * size);
-    line(0.5f * size, -1 * size, 0, 1 * size);
-    line(-0.4f * size, -0.6f * size, 0.4f * size, -0.6f * size); //back line
-    popMatrix();
-
+    pg.stroke(255);
+    pg.strokeWeight(6);
+    pg.line(-0.5f * size, -1 * size, 0, 1 * size);
+    pg.line(0.5f * size, -1 * size, 0, 1 * size);
+    pg.line(-0.4f * size, -0.6f * size, 0.4f * size, -0.6f * size); //back line
+    pg.popMatrix();
   }
 
   //// update dodger position
@@ -334,13 +368,13 @@ class Dodger {
   public void bounds() {
     if(pos.x < 0+size*2/3) {
       pos.x = 0+size*2/3;
-    } else if(pos.x > width-size*2/3) {
-      pos.x = width-size*2/3;
+    } else if(pos.x > pgWidth-size*2/3) {
+      pos.x = pgWidth-size*2/3;
     }
     if(pos.y < 0+size*2/3) {
       pos.y = 0+size*2/3;
-    } else if(pos.y > height-size*2/3) {
-      pos.y = height-size*2/3;
+    } else if(pos.y > pgHeight-size*2/3) {
+      pos.y = pgHeight-size*2/3;
     }
   }
 }
@@ -407,68 +441,68 @@ class Enemy {
 
   //// draw the aura of the enemy
   public void drawCircle() {
-    pushMatrix();
-    translate(pos.x, pos.y);
+    pg.pushMatrix();
+    pg.translate(pos.x, pos.y);
     if(!circleTouched) {
-      noStroke();
+      pg.noStroke();
       if(type == "boss1") {
-        fill(255, 255, 255, circleTransparency + hp/8);
-        ellipse(0, 0, 2*size*bossCFactor, 2*size*bossCFactor);
-        fill(0);
-        ellipse(0, 0, (size+dodger.size), (size+dodger.size));
+        pg.fill(255, 255, 255, circleTransparency + hp/8);
+        pg.ellipse(0, 0, 2*size*bossCFactor, 2*size*bossCFactor);
+        pg.fill(0);
+        pg.ellipse(0, 0, (size+dodger.size), (size+dodger.size));
       } else {
-        fill(255, 255, 255, circleTransparency + hp);
-        ellipse(0, 0, 2*size*circleFactor + circleAdd, 2*size*circleFactor + circleAdd);
+        pg.fill(255, 255, 255, circleTransparency + hp);
+        pg.ellipse(0, 0, 2*size*circleFactor + circleAdd, 2*size*circleFactor + circleAdd);
       }
-      noStroke();
+      pg.noStroke();
     }
-    popMatrix();
+    pg.popMatrix();
   }
 
   //// draw the enemy
   public void draw() {
-    fill(0);
-    rectMode(CENTER);
-    ellipseMode(CENTER);
-    pushMatrix();
-    translate(pos.x, pos.y);
-    rotate(a);
+    pg.fill(0);
+    pg.rectMode(CENTER);
+    pg.ellipseMode(CENTER);
+    pg.pushMatrix();
+    pg.translate(pos.x, pos.y);
+    pg.rotate(a);
     if(!circleTouched) {
-      stroke(255);
-      fill(0);
+      pg.stroke(255);
+      pg.fill(0);
     } else {
-      stroke(255);
-      fill(255);
+      pg.stroke(255);
+      pg.fill(255);
     }
-    strokeWeight(3);
+    pg.strokeWeight(3);
     if(type == "ship") {
-      beginShape();
-        vertex(-1 * size,   -1 * size);
-        vertex(0          ,    1 * size);
-        vertex(0.5f * size ,   -1 * size);
-        vertex(0          , -0.3f * size);
-        vertex(-1 * size,   -1 * size);
-      endShape();
+      pg.beginShape();
+        pg.vertex(-1 * size,   -1 * size);
+        pg.vertex(0          ,    1 * size);
+        pg.vertex(0.5f * size ,   -1 * size);
+        pg.vertex(0          , -0.3f * size);
+        pg.vertex(-1 * size,   -1 * size);
+      pg.endShape();
     } else if(type == "asteroid" || type == "boss1") {
-      rotate(frameCount*0.01f);
-          beginShape();
-            vertex(0, -rndmAst[1]);
-            vertex(rndmAst[2], 0);
-            vertex(0, rndmAst[3]);
-            vertex(-rndmAst[4], 0);
-            vertex(-12, -12);
-            vertex(0, -rndmAst[1]);
-          endShape();
+      pg.rotate(frameCount*0.01f);
+          pg.beginShape();
+            pg.vertex(0, -rndmAst[1]);
+            pg.vertex(rndmAst[2], 0);
+            pg.vertex(0, rndmAst[3]);
+            pg.vertex(-rndmAst[4], 0);
+            pg.vertex(-12, -12);
+            pg.vertex(0, -rndmAst[1]);
+          pg.endShape();
       } else if(type == "kamikaze") {
-        beginShape();
-          vertex(-0.5f * size,   -1 * size);
-          vertex(0          ,    1 * size);
-          vertex(0.5f * size ,   -1 * size);
-          vertex(0          , -0.3f * size);
-          vertex(-0.5f * size,   -1 * size);
-        endShape();
+        pg.beginShape();
+          pg.vertex(-0.5f * size,   -1 * size);
+          pg.vertex(0          ,    1 * size);
+          pg.vertex(0.5f * size ,   -1 * size);
+          pg.vertex(0          , -0.3f * size);
+          pg.vertex(-0.5f * size,   -1 * size);
+        pg.endShape();
       }
-    popMatrix();
+    pg.popMatrix();
   }
 
   //// update enemy position
@@ -492,25 +526,25 @@ class Enemy {
     if(type == "boss1"){
     // put boss back into the field if aura was not broken. Also, increase it's velocity.
       if(pos.x < 0-bossCFactor && !circleTouched){
-        pos.x += width + 7.9f*bossCFactor;
+        pos.x += pgWidth + 7.9f*bossCFactor;
         vel *= 1.02f;
-      } else if(pos.x > width+bossCFactor && !circleTouched){
-        pos.x -= width + 7.9f*bossCFactor;
+      } else if(pos.x > pgWidth+bossCFactor && !circleTouched){
+        pos.x -= pgWidth + 7.9f*bossCFactor;
         vel *= 1.02f;
       } else if(pos.y < 0-bossCFactor && !circleTouched){
-        pos.y += height + 7.9f*bossCFactor;
+        pos.y += pgHeight + 7.9f*bossCFactor;
         vel *= 1.02f;
-      } else if(pos.y > height+bossCFactor && !circleTouched){
-        pos.y -= height + 7.9f*bossCFactor;
+      } else if(pos.y > pgHeight+bossCFactor && !circleTouched){
+        pos.y -= pgHeight + 7.9f*bossCFactor;
         vel *= 1.02f;
       } else if ( //if one of the above and circleTouched
-        (pos.x < 0-3*bossCFactor) || (pos.x > width+3*bossCFactor && !circleTouched)
-        || (pos.y < 0-3*bossCFactor) || (pos.y > height+3*bossCFactor && !circleTouched)) {
+        (pos.x < 0-3*bossCFactor) || (pos.x > pgWidth+3*bossCFactor && !circleTouched)
+        || (pos.y < 0-3*bossCFactor) || (pos.y > pgHeight+3*bossCFactor && !circleTouched)) {
         if(circleTouched) return true;
       }
       return false;
-    } else if(pos.x < 0-1.1f*(circleFactor+circleAdd) || pos.x > width+1.1f*(circleFactor+circleAdd)
-           || pos.y < 0-1.1f*(circleFactor+circleAdd) || pos.y > height+1.1f*(circleFactor+circleAdd) ) {
+    } else if(pos.x < 0-1.1f*(circleFactor+circleAdd) || pos.x > pgWidth+1.1f*(circleFactor+circleAdd)
+           || pos.y < 0-1.1f*(circleFactor+circleAdd) || pos.y > pgHeight+1.1f*(circleFactor+circleAdd) ) {
       return true;
     } else {
       return false;
@@ -535,7 +569,7 @@ class Enemy {
     }
   }
 }
-  public void settings() {  fullScreen(P2D);  smooth(5); }
+  public void settings() {  fullScreen(P2D);  smooth(2); }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "dodger" };
     if (passedArgs != null) {

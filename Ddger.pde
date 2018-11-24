@@ -12,20 +12,19 @@ class Dodger {
     a = _a;
   }
 
-  //// draw the enemy
+  //// draw dodger
   void draw() {
-    rectMode(CENTER);
-    pushMatrix();
-    translate(pos.x, pos.y);
-    rotate(a);
+    pg.rectMode(CENTER);
+    pg.pushMatrix();
+    pg.translate(pos.x, pos.y);
+    pg.rotate(a);
     // rect(0, 0, sin(a)*30, 50);
-    stroke(255);
-    strokeWeight(6);
-    line(-0.5 * size, -1 * size, 0, 1 * size);
-    line(0.5 * size, -1 * size, 0, 1 * size);
-    line(-0.4 * size, -0.6 * size, 0.4 * size, -0.6 * size); //back line
-    popMatrix();
-
+    pg.stroke(255);
+    pg.strokeWeight(6);
+    pg.line(-0.5 * size, -1 * size, 0, 1 * size);
+    pg.line(0.5 * size, -1 * size, 0, 1 * size);
+    pg.line(-0.4 * size, -0.6 * size, 0.4 * size, -0.6 * size); //back line
+    pg.popMatrix();
   }
 
   //// update dodger position
@@ -45,13 +44,13 @@ class Dodger {
   void bounds() {
     if(pos.x < 0+size*2/3) {
       pos.x = 0+size*2/3;
-    } else if(pos.x > width-size*2/3) {
-      pos.x = width-size*2/3;
+    } else if(pos.x > pgWidth-size*2/3) {
+      pos.x = pgWidth-size*2/3;
     }
     if(pos.y < 0+size*2/3) {
       pos.y = 0+size*2/3;
-    } else if(pos.y > height-size*2/3) {
-      pos.y = height-size*2/3;
+    } else if(pos.y > pgHeight-size*2/3) {
+      pos.y = pgHeight-size*2/3;
     }
   }
 }

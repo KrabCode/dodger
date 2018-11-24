@@ -6,6 +6,13 @@ AudioSample pop, sLeft, sRight, snap0, snap1, snap2, gameover;
 AudioPlayer bg;
 boolean gameOverSoundPlayed;
 
+//prepare scaling screen to fixed resolution
+PGraphics pg;
+int pgWidth = 1920;
+int pgHeight = 1080;
+PGraphics pgfeedback;
+float feedbackLevel = 0.9;
+
 //PShape logo;
 
 float score;
@@ -51,9 +58,12 @@ void setup() {
   // size(1000, 1000);
   fullScreen(P2D);
   orientation(PORTRAIT);
+  //prepare scaling screen to fixed resolution
+  pg = createGraphics(pgWidth, pgHeight, P2D);
+  pgfeedback = createGraphics(pgWidth, pgHeight, P2D);
   noCursor();
   frameRate(60);
-  smooth(5);
+  smooth(2);
   background(0);
 
   //sounds
@@ -85,7 +95,7 @@ void initGame() {
   scVel = 0.015 * changeVel;
   rotAcc = 1.6 * changeVel;
   scAcc = 0.007 * changeVel;
-  dodger = new Dodger(width/2, height/2, 0);
+  dodger = new Dodger(pgWidth/2, height/2, 0);
 
   //enemy attributes
   startEVel = 3 * changeVel;
@@ -106,11 +116,17 @@ void initGame() {
 
 //// draw function with gamestates
 void draw() {
+  pg.beginDraw();
+  pg.background(0);
+
   if(!gameOver){
     runGame();
   } else {
     showScore();
   }
+
+  pg.endDraw();
+  image(pg, 0, 0, width, height);
 }
 
 //// perform a frame of the gameplay
@@ -122,9 +138,9 @@ void runGame() {
     gameover.stop();
     bg.play();
   }
-  background(0, 0, 0);
-  textSize(30);
-  fill(255);
+  pg.background(0, 0, 0);
+  pg.textSize(30);
+  pg.fill(255);
   // adjust amount of enemies according to score
   if(int(score/25 + sActive) > eActive && eActive < maxE) {
     eActive++;
@@ -185,6 +201,8 @@ void runGame() {
   rotVel *= rotDamp;                      // dampen the rotation velocity
 }
 
+/////GAME LOGICKS/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 //// spawn a new enemy
 void newEnemy() {
   String thisType;
@@ -209,11 +227,11 @@ void newEnemy() {
   }
   if(border == 1) {
     //top border
-    enemies[eNum] = new Enemy(random(width), 0-enemyDiameter, random(HALF_PI + PI + limiter, 3*QUARTER_PI - limiter), startEVel, thisType);
+    enemies[eNum] = new Enemy(random(pgWidth), 0-enemyDiameter, random(HALF_PI + PI + limiter, 3*QUARTER_PI - limiter), startEVel, thisType);
   }
   if(border == 2) {
     //right border
-    enemies[eNum] = new Enemy(width+enemyDiameter, random(height), random(TWO_PI + limiter, TWO_PI + PI - limiter), startEVel, thisType);
+    enemies[eNum] = new Enemy(pgWidth+enemyDiameter, random(height), random(TWO_PI + limiter, TWO_PI + PI - limiter), startEVel, thisType);
   }
   if(border == 3) {
     //bottom border
@@ -229,26 +247,41 @@ void showScore() {
     gameover.trigger(); //play the game over sample
     gameOverSoundPlayed = true; //so it doesnt play again
   }
-  background(0);
-  textSize(150);
-  fill(255);
-  stroke(255);
-  strokeWeight(6);
-  textAlign(CENTER, CENTER);
+  pg.background(0);
+  pg.textSize(150);
+  pg.fill(255);
+  pg.stroke(255);
+  pg.strokeWeight(6);
+  pg.textAlign(CENTER, CENTER);
   // draw logo
   //int border = 15;
-  //shape(logo, border, border+500, width-border, 750);
+  //shape(logo, border, border+500, pgWidth-border, 750);
   //update score
   if (score > hiscore){
     hiscore = int(score);
   }
   // draw menu, score & high score
-  text(hiscore, width*2/4, height*1/4 -50);
-  text(int(score), width*2/4, height*3.3/4 -50);
+  pg.text(hiscore, pgWidth*2/4, pgHeight*1/4 -50);
+  pg.text(int(score), pgWidth*2/4, pgHeight*3.3/4 -50);
+
   // wait for key input to start new game
 }
 
-///////////////INPUTS///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////GRAPHICS////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//Feedback Functions
+
+void feedbackCapture(PGraphics output) {
+  pg.loadPixels();
+  output.loadPixels();
+
+  arrayCopy(pg.pixels, output.pixels);
+
+  output.updatePixels();
+}
+
+///////////////INPUTS////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void keyPressed() { // listen for user input // touchStarted
   if(gameOver && keyCode == ' '){
     gameOver = !gameOver;

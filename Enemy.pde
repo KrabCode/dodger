@@ -61,68 +61,68 @@ class Enemy {
 
   //// draw the aura of the enemy
   void drawCircle() {
-    pushMatrix();
-    translate(pos.x, pos.y);
+    pg.pushMatrix();
+    pg.translate(pos.x, pos.y);
     if(!circleTouched) {
-      noStroke();
+      pg.noStroke();
       if(type == "boss1") {
-        fill(255, 255, 255, circleTransparency + hp/8);
-        ellipse(0, 0, 2*size*bossCFactor, 2*size*bossCFactor);
-        fill(0);
-        ellipse(0, 0, (size+dodger.size), (size+dodger.size));
+        pg.fill(255, 255, 255, circleTransparency + hp/8);
+        pg.ellipse(0, 0, 2*size*bossCFactor, 2*size*bossCFactor);
+        pg.fill(0);
+        pg.ellipse(0, 0, (size+dodger.size), (size+dodger.size));
       } else {
-        fill(255, 255, 255, circleTransparency + hp);
-        ellipse(0, 0, 2*size*circleFactor + circleAdd, 2*size*circleFactor + circleAdd);
+        pg.fill(255, 255, 255, circleTransparency + hp);
+        pg.ellipse(0, 0, 2*size*circleFactor + circleAdd, 2*size*circleFactor + circleAdd);
       }
-      noStroke();
+      pg.noStroke();
     }
-    popMatrix();
+    pg.popMatrix();
   }
 
   //// draw the enemy
   void draw() {
-    fill(0);
-    rectMode(CENTER);
-    ellipseMode(CENTER);
-    pushMatrix();
-    translate(pos.x, pos.y);
-    rotate(a);
+    pg.fill(0);
+    pg.rectMode(CENTER);
+    pg.ellipseMode(CENTER);
+    pg.pushMatrix();
+    pg.translate(pos.x, pos.y);
+    pg.rotate(a);
     if(!circleTouched) {
-      stroke(255);
-      fill(0);
+      pg.stroke(255);
+      pg.fill(0);
     } else {
-      stroke(255);
-      fill(255);
+      pg.stroke(255);
+      pg.fill(255);
     }
-    strokeWeight(3);
+    pg.strokeWeight(3);
     if(type == "ship") {
-      beginShape();
-        vertex(-1 * size,   -1 * size);
-        vertex(0          ,    1 * size);
-        vertex(0.5 * size ,   -1 * size);
-        vertex(0          , -0.3 * size);
-        vertex(-1 * size,   -1 * size);
-      endShape();
+      pg.beginShape();
+        pg.vertex(-1 * size,   -1 * size);
+        pg.vertex(0          ,    1 * size);
+        pg.vertex(0.5 * size ,   -1 * size);
+        pg.vertex(0          , -0.3 * size);
+        pg.vertex(-1 * size,   -1 * size);
+      pg.endShape();
     } else if(type == "asteroid" || type == "boss1") {
-      rotate(frameCount*0.01);
-          beginShape();
-            vertex(0, -rndmAst[1]);
-            vertex(rndmAst[2], 0);
-            vertex(0, rndmAst[3]);
-            vertex(-rndmAst[4], 0);
-            vertex(-12, -12);
-            vertex(0, -rndmAst[1]);
-          endShape();
+      pg.rotate(frameCount*0.01);
+          pg.beginShape();
+            pg.vertex(0, -rndmAst[1]);
+            pg.vertex(rndmAst[2], 0);
+            pg.vertex(0, rndmAst[3]);
+            pg.vertex(-rndmAst[4], 0);
+            pg.vertex(-12, -12);
+            pg.vertex(0, -rndmAst[1]);
+          pg.endShape();
       } else if(type == "kamikaze") {
-        beginShape();
-          vertex(-0.5 * size,   -1 * size);
-          vertex(0          ,    1 * size);
-          vertex(0.5 * size ,   -1 * size);
-          vertex(0          , -0.3 * size);
-          vertex(-0.5 * size,   -1 * size);
-        endShape();
+        pg.beginShape();
+          pg.vertex(-0.5 * size,   -1 * size);
+          pg.vertex(0          ,    1 * size);
+          pg.vertex(0.5 * size ,   -1 * size);
+          pg.vertex(0          , -0.3 * size);
+          pg.vertex(-0.5 * size,   -1 * size);
+        pg.endShape();
       }
-    popMatrix();
+    pg.popMatrix();
   }
 
   //// update enemy position
@@ -146,25 +146,25 @@ class Enemy {
     if(type == "boss1"){
     // put boss back into the field if aura was not broken. Also, increase it's velocity.
       if(pos.x < 0-bossCFactor && !circleTouched){
-        pos.x += width + 7.9*bossCFactor;
+        pos.x += pgWidth + 7.9*bossCFactor;
         vel *= 1.02;
-      } else if(pos.x > width+bossCFactor && !circleTouched){
-        pos.x -= width + 7.9*bossCFactor;
+      } else if(pos.x > pgWidth+bossCFactor && !circleTouched){
+        pos.x -= pgWidth + 7.9*bossCFactor;
         vel *= 1.02;
       } else if(pos.y < 0-bossCFactor && !circleTouched){
-        pos.y += height + 7.9*bossCFactor;
+        pos.y += pgHeight + 7.9*bossCFactor;
         vel *= 1.02;
-      } else if(pos.y > height+bossCFactor && !circleTouched){
-        pos.y -= height + 7.9*bossCFactor;
+      } else if(pos.y > pgHeight+bossCFactor && !circleTouched){
+        pos.y -= pgHeight + 7.9*bossCFactor;
         vel *= 1.02;
       } else if ( //if one of the above and circleTouched
-        (pos.x < 0-3*bossCFactor) || (pos.x > width+3*bossCFactor && !circleTouched)
-        || (pos.y < 0-3*bossCFactor) || (pos.y > height+3*bossCFactor && !circleTouched)) {
+        (pos.x < 0-3*bossCFactor) || (pos.x > pgWidth+3*bossCFactor && !circleTouched)
+        || (pos.y < 0-3*bossCFactor) || (pos.y > pgHeight+3*bossCFactor && !circleTouched)) {
         if(circleTouched) return true;
       }
       return false;
-    } else if(pos.x < 0-1.1*(circleFactor+circleAdd) || pos.x > width+1.1*(circleFactor+circleAdd)
-           || pos.y < 0-1.1*(circleFactor+circleAdd) || pos.y > height+1.1*(circleFactor+circleAdd) ) {
+    } else if(pos.x < 0-1.1*(circleFactor+circleAdd) || pos.x > pgWidth+1.1*(circleFactor+circleAdd)
+           || pos.y < 0-1.1*(circleFactor+circleAdd) || pos.y > pgHeight+1.1*(circleFactor+circleAdd) ) {
       return true;
     } else {
       return false;
