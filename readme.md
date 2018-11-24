@@ -3,6 +3,7 @@
 
 * make proper graphics for kamikaze and boss1
 * create graphics for future enemies
+* change the background to signify the relation between your current score and the last score
 
 **MENU**
 
@@ -48,7 +49,7 @@
   * begin with just auras, gradually introduce enemies (not all types needed)
   * death just respawns
 
-* two player modes: 
+* two player modes:
   * **survival**: no PVP collisions, last dodger standing
   * **score**: first player to score X points wins (collision reduces score by 50%)
   * **slowdown**: score reduces velocity, collision reduces score, on PVP collision the player with higher score wins

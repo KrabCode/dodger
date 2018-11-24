@@ -4,12 +4,37 @@ class Dodger {
   PVector pos;
   PVector move;
   float a;
-  float size = 28;
+  float size = dodgerSize;
   float vel = startVel;
 
   Dodger (float _x, float _y, float _a) {
     pos = new PVector(_x, _y);
     a = _a;
+  }
+
+  //// draw the aura of the enemy
+  void drawCircle() {
+    pg.pushMatrix();
+    pg.translate(pos.x, pos.y);
+
+    // float auraSize = 1 + map(score, 0, highScore + 10, 0, 2);
+    int scale = 20;
+
+    pg.noStroke();
+    pg.fill(255, 255, 255, 10);
+    pg.ellipse(0, 0, 2*size*(score%  7/  7 * scale/4), 2*size*(score%  7/  7 * scale/4) );
+    pg.ellipse(0, 0, 2*size*(score% 49/ 49 * scale/3), 2*size*(score% 49/ 49 * scale/3) );
+
+    pg.stroke(255, 255, 255, 100);
+    pg.strokeWeight(4);
+    pg.ellipse(0, 0, 2*size*(score%343/343 * scale/2), 2*size*(score%343/343 * scale/2) );
+
+    pg.noStroke();
+    pg.fill(0);
+    pg.ellipse(0, 0, size, size);
+
+    pg.noStroke();
+    pg.popMatrix();
   }
 
   //// draw dodger

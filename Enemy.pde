@@ -12,6 +12,8 @@ class Enemy {
   float [] rndmAst = new float[16]; //random zahlen array fuer asteroid vertex
   boolean circleTouched = false;
   int spawnTimer = millis();
+  int untouchable = 6000; // time the bosses are untouchable
+  float transparency;
 
   //// construct the enemy
   Enemy (float _x, float _y, float _a, float _vel, String _type) {
@@ -23,10 +25,9 @@ class Enemy {
       size *= random(0.7, 1.4); // RNG for enemy size
       vel = _vel * random(0.7, 1.3) + score * scEVel;
       for (int i=0; i < rndmAst.length; i++){
-        rndmAst[i] = random(4, size);
-        hp = int(50 / changeVel);
-        //+ int(score/8);
+        rndmAst[i] = random(size/4, size*5/4);
       }
+      hp = int(50 / changeVel);
     }
     if(type == "ship"){
       size = startSize + score*scESize;
@@ -48,7 +49,17 @@ class Enemy {
       hp = int((25 + score/8) /changeVel);
     }
     if(type == "boss1"){
-      size = (startSize + score*scESize) *2 + modifier;
+      size = 10 + (startSize + score*scESize) *2 + modifier;
+      size *= random(0.9, 1.1); // RNG for enemy size
+      vel = _vel * random(0.9, 1.1) + score * scEVel;
+      for (int i=0; i < rndmAst.length; i++){
+        rndmAst[i] = random(4, size);
+        hp = int(400+modifier / changeVel);
+        //+ int(score/8);
+      }
+    }
+    if(type == "boss2"){
+      size = (startSize + score*scESize/2) + modifier/2;
       size *= random(0.9, 1.1); // RNG for enemy size
       vel = _vel * random(0.9, 1.1) + score * scEVel;
       for (int i=0; i < rndmAst.length; i++){
@@ -65,11 +76,11 @@ class Enemy {
     pg.translate(pos.x, pos.y);
     if(!circleTouched) {
       pg.noStroke();
-      if(type == "boss1") {
+      if(type == "boss1" || type == "boss2") {
         pg.fill(255, 255, 255, circleTransparency + hp/8);
         pg.ellipse(0, 0, 2*size*bossCFactor, 2*size*bossCFactor);
         pg.fill(0);
-        pg.ellipse(0, 0, (size+dodger.size), (size+dodger.size));
+        pg.ellipse(0, 0, size, size);
       } else {
         pg.fill(255, 255, 255, circleTransparency + hp);
         pg.ellipse(0, 0, 2*size*circleFactor + circleAdd, 2*size*circleFactor + circleAdd);
@@ -103,25 +114,35 @@ class Enemy {
         pg.vertex(0          , -0.3 * size);
         pg.vertex(-1 * size,   -1 * size);
       pg.endShape();
-    } else if(type == "asteroid" || type == "boss1") {
+    } else if(type == "asteroid") {
       pg.rotate(frameCount*0.01);
-          pg.beginShape();
-            pg.vertex(0, -rndmAst[1]);
-            pg.vertex(rndmAst[2], 0);
-            pg.vertex(0, rndmAst[3]);
-            pg.vertex(-rndmAst[4], 0);
-            pg.vertex(-12, -12);
-            pg.vertex(0, -rndmAst[1]);
-          pg.endShape();
-      } else if(type == "kamikaze") {
-        pg.beginShape();
-          pg.vertex(-0.5 * size,   -1 * size);
-          pg.vertex(0          ,    1 * size);
-          pg.vertex(0.5 * size ,   -1 * size);
-          pg.vertex(0          , -0.3 * size);
-          pg.vertex(-0.5 * size,   -1 * size);
-        pg.endShape();
+      pg.beginShape();
+        pg.vertex(0, -rndmAst[1]);
+        pg.vertex(rndmAst[2], 0);
+        pg.vertex(0, rndmAst[3]);
+        pg.vertex(-rndmAst[4], 0);
+        pg.vertex(-12, -12);
+        pg.vertex(0, -rndmAst[1]);
+      pg.endShape();
+    } else if(type == "boss1"  || type == "boss2") {
+      transparency = map(millis() - spawnTimer, 0, untouchable, 55, 255);
+      if(!circleTouched) {
+        pg.stroke(255, 255, 255, transparency);
+        pg.fill(255-transparency, 255-transparency, 255-transparency);
+      } else {
+        pg.stroke(255);
+        pg.fill(255);
       }
+      pg.ellipse(0, 0, size, size);
+    } else if(type == "kamikaze") {
+      pg.beginShape();
+        pg.vertex(-0.5 * size,   -1 * size);
+        pg.vertex(0          ,    1 * size);
+        pg.vertex(0.5 * size ,   -1 * size);
+        pg.vertex(0          , -0.3 * size);
+        pg.vertex(-0.5 * size,   -1 * size);
+      pg.endShape();
+  }
     pg.popMatrix();
   }
 
@@ -129,11 +150,11 @@ class Enemy {
   void update() {
     if(type == "kamikaze" && !circleTouched){
       //slowly turn towards the player
-      PVector nPos = new PVector(-pos.x + dodger.pos.x, -pos.y + dodger.pos.y);
-      PVector pointToPlayer = PVector.fromAngle(nPos.heading() - HALF_PI);
-      PVector direction = PVector.fromAngle(a);
-      direction.lerp(pointToPlayer, 0.05);
-      a = direction.heading();
+      a = turnTowardsPlayer(0.05);
+    }
+    if(type == "boss2" && !circleTouched){
+      //slowly turn towards the player
+      a = turnTowardsPlayer(0.02);
     }
     move = new PVector(0, vel);
     move = move.rotate(a);
@@ -144,27 +165,53 @@ class Enemy {
   //// check if enemy is still inside bounds
   boolean bounds() {
     if(type == "boss1"){
-    // put boss back into the field if aura was not broken. Also, increase it's velocity.
+      // put boss back into the field if aura was not broken. Also, increase it's velocity.
+      boolean bounded = false; // went against boundary?
+      // left
       if(pos.x < 0-bossCFactor && !circleTouched){
-        pos.x += pgWidth + 7.9*bossCFactor;
-        vel *= 1.02;
+        pos.x += 7.9*bossCFactor;
+        if(randomBool()) {
+          a += PI + 0;
+        } else {
+          a += PI + 0;
+        }
+        bounded = true;
+      //right
       } else if(pos.x > pgWidth+bossCFactor && !circleTouched){
-        pos.x -= pgWidth + 7.9*bossCFactor;
-        vel *= 1.02;
-      } else if(pos.y < 0-bossCFactor && !circleTouched){
-        pos.y += pgHeight + 7.9*bossCFactor;
-        vel *= 1.02;
+        pos.x -= 7.9*bossCFactor;
+        if(randomBool()) {
+          a += PI + 0;
+        } else {
+          a += PI + 0;
+        }
+        bounded = true;
+      //top
+      } else if(pos.y < 0-bossCFactor && !circleTouched) {
+        pos.y += 7.9*bossCFactor;
+        if(randomBool()) {
+          a += PI + 0;
+        } else {
+          a += PI + 0;
+        }
+        bounded = true;
+      //bottom
       } else if(pos.y > pgHeight+bossCFactor && !circleTouched){
-        pos.y -= pgHeight + 7.9*bossCFactor;
-        vel *= 1.02;
-      } else if ( //if one of the above and circleTouched
-        (pos.x < 0-3*bossCFactor) || (pos.x > pgWidth+3*bossCFactor && !circleTouched)
-        || (pos.y < 0-3*bossCFactor) || (pos.y > pgHeight+3*bossCFactor && !circleTouched)) {
-        if(circleTouched) return true;
+        pos.y -= 7.9*bossCFactor;
+        if(randomBool()) {
+          a += PI + 0;
+        } else {
+          a += PI + 0;
+        }
+        bounded = true;
+      //if one of the above and circleTouched
+      } else if (bounded && !circleTouched) {
+          if(circleTouched) return true;
+          vel += 0.1;
       }
       return false;
-    } else if(pos.x < 0-1.1*(circleFactor+circleAdd) || pos.x > pgWidth+1.1*(circleFactor+circleAdd)
-           || pos.y < 0-1.1*(circleFactor+circleAdd) || pos.y > pgHeight+1.1*(circleFactor+circleAdd) ) {
+    } else if(type == "boss2"){
+      return false;
+    } else if( pos.x < 0-1.1*(circleFactor+circleAdd) || pos.x > pgWidth+1.1*(circleFactor+circleAdd)|| pos.y < 0-1.1*(circleFactor+circleAdd) || pos.y > pgHeight+1.1*(circleFactor+circleAdd) ) {
       return true;
     } else {
       return false;
@@ -173,7 +220,16 @@ class Enemy {
 
   //// check if dodger collides with the enemy
   boolean collision() {
-    if(pos.dist(dodger.pos) <= (0.5*(size+dodger.size)) ) {
+    // don't collide with boss if it just spawned
+    if (type == "boss1"  || type == "boss2") {
+      if(millis() - spawnTimer < 6000) return false;
+      if(pos.dist(dodger.pos) <= (0.5*size + dodger.size) ) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+    if(pos.dist(dodger.pos) <= (0.5*(size + dodger.size)) ) {
       return true;
     } else {
       return false;
@@ -182,10 +238,29 @@ class Enemy {
 
   //// check if dodger collides with the enemies aura
   boolean circleCollision() {
+    if (type == "boss1"  || type == "boss2") {
+      if(millis() - spawnTimer < 6000) return false;
+      pg.ellipse(0, 0, (size+dodger.size), (size+dodger.size));
+
+      if(pos.dist(dodger.pos) <= size*bossCFactor) {
+        return true;
+      } else {
+        return false;
+      }
+    }
     if(pos.dist(dodger.pos) <= (size*circleFactor + circleAdd/2 + dodger.size) ) {
       return true;
     } else {
       return false;
     }
   }
+
+  float turnTowardsPlayer(float lerpFactor) {
+    PVector nPos = new PVector(-pos.x + dodger.pos.x, -pos.y + dodger.pos.y);
+    PVector pointToPlayer = PVector.fromAngle(nPos.heading() - HALF_PI);
+    PVector direction = PVector.fromAngle(a);
+    direction.lerp(pointToPlayer, lerpFactor);
+    return direction.heading();
+  }
+
 }
