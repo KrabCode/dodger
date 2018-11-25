@@ -25,7 +25,7 @@ int playTime;
 boolean gameOver; // goes to main menu
 boolean mainMenu; // starts a new game
 
-int diagBar = 1;  // sets the state of  the diagnostics bar, can be changed by num keys
+int diagBar = 6;  // sets the state of  the diagnostics bar, can be changed by num keys
 float scoreRate;
 
 float changeVel = 1;                  // modifies all velocities
@@ -39,7 +39,7 @@ float scVel;
 float rotVel;                         // rotation velocity of dodger
 float rotAcc;                         // rotation acceleration of dodger, increases by scAcc for every score
 float scAcc;
-float rotDamp = 0.995;                // rotation velocity dampening
+float rotDamp = 0.99;                // rotation velocity dampening
 boolean clockwise;                    // is the player turning clockwise
 
 /// Enemy
@@ -47,18 +47,19 @@ int maxE = 30;
 Enemy[] enemies = new Enemy[maxE];
 int eNum;                             // index of current enemy
 int sActive = 8;                      // enemies active at start
-int enemiesPerScore = 40;             // amount of score necessary to increase sActive by one
+int enemiesPerScore = 60;             // amount of score necessary to increase sActive by one
 int eActive;                          // enemies currently active
 float limiter;                        // makes the arrow more narrow
 float startEVel;                      // beginning velocity of enemies, increases by scEVel for every score
 float scEVel;
-float startSize = 30;                 // beginning size of enemies, increases by scESize for every score
-float scESize = 0.03;
-float enemyDrain = 0.4;               // verlocity of enemy after aura was harvested
-float shipChance;                     // chance to spawn ship instead of asteroid
-float kamiChance;                     // chance to spawn kamikaze, starts at 0 increases with score
-float chanceModifier;                 // number by which the chance for enemy types gets modified
-boolean bossActive = false;            // tells us if there is a boss on the field
+float startSize = 25;                 // beginning size of enemies, increases by scESize for every score
+float scESize = 0.015;
+float enemyDrain = 0.7;               // verlocity of enemy after aura was harvested
+float enemyRDrain = 0.5;              // rotation of enemy after aura was harvested
+float shipChance, shipVal;            // chance to spawn ship instead of asteroid
+float kamiChance, kamiVal;            // chance to spawn kamikaze, starts at 0 increases with score
+float chanceModifier = 1/500;         // number by which the chance for enemy types gets modified
+boolean bossActive = false;           // tells us if there is a boss on the field
 int bossNumber;                       // cycles through the bosses
 int nextBossNumber;
 float modifier;                       // used to modify some starting values
@@ -91,13 +92,14 @@ void setup() {
   snap0 = minim.loadSample("snap0.wav", bufferSize);
   snap1 = minim.loadSample("snap1.wav", bufferSize);
   snap2 = minim.loadSample("snap2.wav", bufferSize);
-  bg = minim.loadFile("bg.wav", bufferSize);
+  bg = minim.loadFile("bg1.wav", bufferSize);
   gameover = minim.loadSample("pop.wav", bufferSize);
 
   //logo = loadShape("logo.svg");
   //shapeMode(CORNERS);
 
-  score = 50;
+  score = 0;
+  totalScore = 0;
   initGame(); // set up the variables for game initialisation
 }
 
@@ -105,26 +107,26 @@ void setup() {
 void initGame() {
   gameOver = false;
   playTime = second();
-  score *= (4 + min(2, map(totalScore, 0, 1200, 0, 3) + min(2, map(highScore, 0, 500, 0, 3)))) /10;
-  scoreRate = (4 + min(2, map(totalScore, 0, 1200, 0, 3) + min(2, map(highScore, 0, 500, 0, 3)))) /10;            // watch an ad or buy the game to keep 70% of your score
+  scoreRate = (4 + min(1, map(totalScore, 0, 2000, 0, 1)) + min(1.5, map(totalScore, 0, 15000, 0, 1)) + min(1, map(score, 0, 500, 0, 1)) + min(1, map(highScore, 0, 1500, 0, 1))) /10;            // watch an ad or buy the game to keep 70% of your score
+  score *= (4 + min(1, map(totalScore, 0, 2000, 0, 1)) + min(1.5, map(totalScore, 0, 15000, 0, 1)) + min(1, map(score, 0, 500, 0, 1)) + min(1, map(highScore, 0, 1500, 0, 1))) /10;            // watch an ad or buy the game to keep 70% of your score
   // just kidding
-
+  // println(" 0-2000: " + min(1, map(totalScore, 0, 2000, 0, 1)) + " / 0-15000:" + min(1, map(totalScore, 0, 15000, 0, 1)) + " / h 0-1000" + min(2, map(highScore, 0, 1000, 0, 2)) );
 
   // dodger attributes
   rotVel = 20;
-  startVel = 2.6 * changeVel;
+  startVel = 2 * changeVel;
   scVel = 0.002 * changeVel;
-  rotAcc = random(0.4, 0.7) * changeVel;
-  scAcc = 0.002 * changeVel;
+  rotAcc = random(0.06, 0.10) * changeVel;
+  scAcc = 0.0009 * changeVel;
   dodger = new Dodger(pgWidth/2, pgHeight/2, 0);
 
   //enemy attributes
-  startEVel = 2 * changeVel;
+  startEVel = 1.6 * changeVel;
   scEVel = 0.0025 * changeVel;
   limiter = 0.7;
   eActive = sActive;
-  shipChance = 0.1; //starting chance for spawn to be ship, increases with score as well
-  kamiChance = -0.2;
+  shipChance = 0.25; //starting chance for spawn to be ship, increases with score as well
+  kamiChance = 0.1;
   bossNumber = 0;
   bossActive = false;
 
@@ -164,11 +166,12 @@ void runGame() {
   if(bg.position() == bg.length()) {
     bg.rewind();
   }
-  if(muted) {
-    bg.pause();
-  } else if(!bg.isPlaying() && !muted) {
-    //gameover.trigger();
-    bg.pause();
+  // if(muted) {
+  //   bg.pause();
+  // } else && !muted
+  if(!bg.isPlaying()) {
+    gameover.trigger();
+    bg.play();
   }
   pg.background(0, 0, 0);
   pg.textSize(30);
@@ -222,7 +225,8 @@ void runGame() {
             break;
         }
         enemies[eNum].circleTouched = true;
-        enemies[eNum].vel *= enemyDrain;         // reduce enemy velocity when circle disappears
+        enemies[eNum].vel *= enemyDrain;                                           // reduce enemy velocity when circle disappears
+        enemies[eNum].rotation = (enemies[eNum].rotation % TWO_PI) *enemyRDrain;  // reduce enemy rotation when circle disappears
       }
     }
     enemies[eNum].drawCircle();           // draws circle first so no overlap with enemies
@@ -246,14 +250,16 @@ void runGame() {
 void newEnemy() {
   String thisType = "asteroid";
   int border = (int) random(4);         // determine which edge enemies spawn from
-  float type = random(1);               // determine which type the enemy is going to be
+  float typeR = random(1);               // determine which type the enemy is going to be
+
   // check if bosses get spawned
   nextBossNumber = int(30 + bossNumber*5);
   if(score > 5 && score % nextBossNumber <= 5 && !bossActive) {
     modifier = score;
     bossActive = true;
-    chanceModifier = score / 450;
-    switch(bossNumber % 2) {
+    float bossSeed = random(1,5);
+    println("making boss", int(bossNumber+bossSeed));
+    switch(int(bossNumber+bossSeed) % 2) {
       case 0:
         thisType = "boss1";
         break;
@@ -262,9 +268,11 @@ void newEnemy() {
         break;
     }
     bossNumber += 1;
-  } else if(type > 1 -kamiChance - score / 550) {
+    kamiVal = (-score*chanceModifier + kamiChance);
+    shipVal = (-score*chanceModifier + shipChance);
+    } else if( (typeR) > 1-kamiVal ) {
     thisType = "kamikaze";
-  } else if(type > 1 -shipChance - chanceModifier) {
+    } else if( (typeR) > 1-shipVal ) {
     thisType = "ship";
   } else {
     thisType = "asteroid";
@@ -313,8 +321,9 @@ void showScore() {
   pg.textSize(140);
   pg.text(int(score), pgWidth*2/4, pgHeight*1/4 -50);
   pg.textSize(30);
-  pg.text(" || best "+ int(highScore) + " || total " + totalScore + " || rate "+ scoreRate + " || " + playDiff + "sec || next " + int(nextScore), pgWidth*2/4, pgHeight*2/5 -50);
-  pg.text( "|| rate" + min(2, map(highScore, 0, 500, 0, 3)) /10 + " || rate " + (4 + min(2, map(totalScore, 0, 1200, 0, 3))) + "                                ", pgWidth*2/4, pgHeight*2.2/5 -50);
+  // pg.text(" || best "+ int(highScore) + " || total " + totalScore + " || rate "+ scoreRate + " || " + playDiff + "sec || next " + int(nextScore), pgWidth*2/4, pgHeight*2/5 -50);
+  pg.text(" || best "+ int(highScore) + " || total " + totalScore + " || rate "+ scoreRate + " || next " + int(nextScore) + " || ", pgWidth*2/4, pgHeight*2/5 -50);
+  // pg.text( "|| rate" + min(2, map(highScore, 0, 500, 0, 3)) /10 + " || rate " + (4 + min(2, map(totalScore, 0, 1200, 0, 3))) + "                                ", pgWidth*2/4, pgHeight*2.2/5 -50);
   // pg.textSize(100);
   // pg.text(int(score), pgWidth*2/4, pgHeight*3.3/4 -50);
 
@@ -348,14 +357,16 @@ boolean randomBool() {
 
 //// display a bar with information
 void drawBar() {
+  scoreRate = (4 + min(1, map(totalScore, 0, 2000, 0, 1)) + min(1.5, map(totalScore, 0, 15000, 0, 1)) + min(1, map(score, 0, 500, 0, 1)) + min(1, map(highScore, 0, 1500, 0, 1))) /10;            // watch an ad or buy the game to keep 70% of your score
   pg.textSize(22);
   pg.fill(255, 255, 255, 150);
   pg.noStroke();
   pg.textAlign(LEFT, TOP);
   switch(diagBar) {
     case 0:
+    // show just score
+      pg.text(" || "+ score + " ||", 10, 10);
       break;
-      // show just score
     case 1:
       int playDiff = second() - playTime;
 
@@ -372,8 +383,8 @@ void drawBar() {
       " || size start:" + startSize +
       "  +s* " + scESize +
       "  current:" + nf(startSize + score*scESize, 0, 3) +
-      " || chance for ship:" + nf(shipChance + chanceModifier, 0, 3) +
-      " kami:" + nf(kamiChance + chanceModifier, 0, 3), 10, 10);
+      " || chance for ship:" + shipVal +
+      " kami:" + kamiVal, 10, 10);
       break;
     // show dodger stats
     case 3:
@@ -382,11 +393,11 @@ void drawBar() {
               "  +s* " + scVel +
               "  current:" + nf(startVel + score*scVel, 0, 3) +
               " || size:" + dodgerSize +
-              "    || chance for ship:" + nf(shipChance + chanceModifier, 0, 3) +
-              " kami:" + nf(kamiChance + chanceModifier, 0, 3), 10, 10);
+              " || chance for ship:" + shipVal +
+              " kami:" + kamiVal, 10, 10);
     break;
     case 9:
-      pg.text(" || "+ score +" || K = game over | arrow keys | modify score ||" + score % nextBossNumber, 10, 10);
+      pg.text(" || "+ score +" || (case sensitive) K = game over | WASD = modify score ||" + score % nextBossNumber, 10, 10);
       break;
   }
 
@@ -396,7 +407,7 @@ void drawBar() {
 ///////////////INPUTS////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void keyPressed() { // listen for user input // touchStarted
-  if(gameOver && !clockwise){
+  if(gameOver && !clockwise && keyCode == ' '){
     gameOver = false;
     mainMenu = true;
     showMenu();
@@ -448,16 +459,16 @@ void keyPressed() { // listen for user input // touchStarted
     case 'M':
       muted = !muted;
       break;
-    case RIGHT:
+    case 'D':
       score++;
       break;
-    case UP:
+    case 'W':
       score += 10;
       break;
-    case LEFT:
+    case 'A':
       score--;
       break;
-    case DOWN:
+    case 'S':
       score -= 10;
       break;
   }

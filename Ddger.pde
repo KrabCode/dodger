@@ -22,12 +22,12 @@ class Dodger {
 
     pg.noStroke();
     pg.fill(255, 255, 255, 10);
-    pg.ellipse(0, 0, 2*size*(score%  7/  7 * scale/4), 2*size*(score%  7/  7 * scale/4) );
-    pg.ellipse(0, 0, 2*size*(score% 49/ 49 * scale/3), 2*size*(score% 49/ 49 * scale/3) );
+    pg.ellipse(0, 0, 2*size*(score%  9/  9 * scale/4), 2*size*(score%  9/  9 * scale/4) );
+    pg.ellipse(0, 0, 2*size*(score% (9*9)/ (9*9) * scale/3), 2*size*(score% (9*9)/ (9*9) * scale/3) );
 
     pg.stroke(255, 255, 255, 100);
     pg.strokeWeight(4);
-    pg.ellipse(0, 0, 2*size*(score%343/343 * scale/2), 2*size*(score%343/343 * scale/2) );
+    pg.ellipse(0, 0, 2*size*(score%(9*9*9)/(9*9*9) * scale/2), 2*size*(score%(9*9*9)/(9*9*9) * scale/2) );
 
     pg.noStroke();
     pg.fill(0);

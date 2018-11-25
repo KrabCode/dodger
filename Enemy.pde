@@ -14,6 +14,7 @@ class Enemy {
   int spawnTimer = millis();
   int untouchable = 6000; // time the bosses are untouchable
   float transparency;
+  float rotation = random(-1, 1);
 
   //// construct the enemy
   Enemy (float _x, float _y, float _a, float _vel, String _type) {
@@ -27,7 +28,7 @@ class Enemy {
       for (int i=0; i < rndmAst.length; i++){
         rndmAst[i] = random(size/4, size*5/4);
       }
-      hp = int(50 / changeVel);
+      hp = int((50 + score/50) / changeVel);
     }
     if(type == "ship"){
       size = startSize + score*scESize;
@@ -37,7 +38,7 @@ class Enemy {
       PVector nPos = new PVector(-pos.x + dodger.pos.x, -pos.y + dodger.pos.y);
       a = nPos.heading() - HALF_PI;
       vel *= 1.5;
-      hp = int((30 + score/15) /changeVel);
+      hp = int((30 + score/40) /changeVel);
     }
     if(type == "kamikaze"){
       size = startSize + score*scESize;
@@ -46,12 +47,12 @@ class Enemy {
       //set angle to player
       PVector nPos = new PVector(-pos.x + dodger.pos.x, -pos.y + dodger.pos.y);
       a = nPos.heading() - HALF_PI;
-      hp = int((25 + score/8) /changeVel);
+      hp = int((25 + score/15) /changeVel);
     }
     if(type == "boss1"){
-      size = 10 + (startSize + score*scESize) *2 + modifier;
+      size = 60 + (startSize + score*scESize)*0.4 + modifier/4;
       size *= random(0.9, 1.1); // RNG for enemy size
-      vel = _vel * random(0.9, 1.1) + score * scEVel;
+      vel = _vel * random(0.6, 0.95) + score * scEVel;
       for (int i=0; i < rndmAst.length; i++){
         rndmAst[i] = random(4, size);
         hp = int(400+modifier / changeVel);
@@ -59,7 +60,7 @@ class Enemy {
       }
     }
     if(type == "boss2"){
-      size = (startSize + score*scESize/2) + modifier/2;
+      size = 70 + (startSize + score*scESize/2)/5 + modifier/5;
       size *= random(0.9, 1.1); // RNG for enemy size
       vel = _vel * random(0.9, 1.1) + score * scEVel;
       for (int i=0; i < rndmAst.length; i++){
@@ -95,6 +96,7 @@ class Enemy {
     pg.fill(0);
     pg.rectMode(CENTER);
     pg.ellipseMode(CENTER);
+
     pg.pushMatrix();
     pg.translate(pos.x, pos.y);
     pg.rotate(a);
@@ -115,7 +117,7 @@ class Enemy {
         pg.vertex(-1 * size,   -1 * size);
       pg.endShape();
     } else if(type == "asteroid") {
-      pg.rotate(frameCount*0.01);
+      pg.rotate(frameCount*0.03*rotation);
       pg.beginShape();
         pg.vertex(0, -rndmAst[1]);
         pg.vertex(rndmAst[2], 0);
@@ -124,7 +126,7 @@ class Enemy {
         pg.vertex(-12, -12);
         pg.vertex(0, -rndmAst[1]);
       pg.endShape();
-    } else if(type == "boss1"  || type == "boss2") {
+    } else if(type == "boss1") {
       transparency = map(millis() - spawnTimer, 0, untouchable, 55, 255);
       if(!circleTouched) {
         pg.stroke(255, 255, 255, transparency);
@@ -133,7 +135,25 @@ class Enemy {
         pg.stroke(255);
         pg.fill(255);
       }
+      // draws the spawnTimer ellipse
       pg.ellipse(0, 0, size, size);
+      pg.stroke(0);
+      pg.fill(0);
+      pg.ellipse(0, size, size/3, size/3);
+    } else if(type == "boss2") {
+      transparency = map(millis() - spawnTimer, 0, untouchable, 55, 255);
+      if(!circleTouched) {
+        pg.stroke(255, 255, 255, transparency);
+        pg.fill(255-transparency, 255-transparency, 255-transparency);
+      } else {
+        pg.stroke(255);
+        pg.fill(255);
+      }
+      // draws the spawnTimer ellipse
+      pg.ellipse(0, 0, size, size);
+      pg.stroke(0);
+      pg.fill(0);
+      pg.ellipse(0, size, size/3, size/3);
     } else if(type == "kamikaze") {
       pg.beginShape();
         pg.vertex(-0.5 * size,   -1 * size);
@@ -240,7 +260,10 @@ class Enemy {
   boolean circleCollision() {
     if (type == "boss1"  || type == "boss2") {
       if(millis() - spawnTimer < 6000) return false;
-      pg.ellipse(0, 0, (size+dodger.size), (size+dodger.size));
+      pg.pushMatrix();
+      pg.translate(pos.x, pos.y);
+      // pg.ellipse(0, 0, (size+dodger.size), (size+dodger.size));
+      pg.popMatrix();
 
       if(pos.dist(dodger.pos) <= size*bossCFactor) {
         return true;
